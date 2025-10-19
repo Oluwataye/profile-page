@@ -18,9 +18,14 @@ interface Project {
 const Index = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
+  
+  const PROJECTS_PER_PAGE = 6;
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -57,17 +62,31 @@ const Index = () => {
     }
   };
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(0);
   }, []);
-  const fetchProjects = async () => {
+  
+  const fetchProjects = async (pageNum: number, append = false) => {
     try {
+      if (append) {
+        setLoadingMore(true);
+      }
+      
+      const from = pageNum * PROJECTS_PER_PAGE;
+      const to = from + PROJECTS_PER_PAGE - 1;
+      
       const {
         data: projectsData,
-        error
-      } = await supabase.from("projects").select("*").eq("published", true).order("created_at", {
-        ascending: false
-      });
+        error,
+        count
+      } = await supabase
+        .from("projects")
+        .select("*", { count: "exact" })
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .range(from, to);
+      
       if (error) throw error;
+      
       const projectsWithCounts = await Promise.all((projectsData || []).map(async project => {
         const [likesResult, commentsResult, likeResult] = await Promise.all([supabase.from("likes").select("*", {
           count: "exact",
@@ -85,12 +104,25 @@ const Index = () => {
           is_liked: !!likeResult.data
         };
       }));
-      setProjects(projectsWithCounts);
+      
+      if (append) {
+        setProjects(prev => [...prev, ...projectsWithCounts]);
+      } else {
+        setProjects(projectsWithCounts);
+      }
+      
+      setHasMore((count || 0) > (pageNum + 1) * PROJECTS_PER_PAGE);
+      setPage(pageNum);
     } catch (error: any) {
       toast.error("Failed to load projects");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+  
+  const handleLoadMore = () => {
+    fetchProjects(page + 1, true);
   };
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -131,13 +163,35 @@ const Index = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div> : projects.length === 0 ? <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">No projects yet. Check back soon!</p>
-          </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => <div key={project.id} className="animate-fade-in" style={{
-          animationDelay: `${index * 0.1}s`
-        }}>
-                <ProjectCard {...project} />
-              </div>)}
-          </div>}
+          </div> : <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {projects.map((project, index) => <div key={project.id} className="animate-fade-in" style={{
+            animationDelay: `${index * 0.1}s`
+          }}>
+                  <ProjectCard {...project} />
+                </div>)}
+            </div>
+            
+            {hasMore && (
+              <div className="flex justify-center mt-12">
+                <Button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More Projects"
+                  )}
+                </Button>
+              </div>
+            )}
+          </>}
       </section>
 
       {/* Footer */}
