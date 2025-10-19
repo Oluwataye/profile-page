@@ -127,9 +127,7 @@ const Index = () => {
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto max-w-5xl text-center space-y-8 mb-20">
-          <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight animate-fade-in">
-            TAYEDATAINSIGHTS
-          </h2>
+          <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight animate-fade-in">TAYE-NOCODE</h2>
           <p className="text-lg md:text-xl lg:text-2xl text-white/90 italic animate-fade-in" style={{
           animationDelay: "0.2s"
         }}>Nocode Expert in Lovable, Bolt, V0, Replit  @Taye David Ibukun</p>
