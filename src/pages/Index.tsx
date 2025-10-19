@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/ProjectCard";
-import { Loader2, LogOut, Settings } from "lucide-react";
+import { Loader2, LogOut, Settings, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 interface Project {
   id: string;
@@ -101,7 +101,7 @@ const Index = () => {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Professional Portfolio
+            TAYE DAVID IBUKUN
           </h1>
           <div className="flex gap-2">
             {user ? <>
@@ -125,16 +125,26 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[var(--gradient-hero)]" />
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in">
-            No-Code Web Apps
+      <section className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="container mx-auto max-w-5xl text-center space-y-8 mb-20">
+          <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight animate-fade-in">
+            TAYEDATAINSIGHTS
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 animate-fade-in" style={{
-          animationDelay: "0.1s"
-        }}>Nocode Expert in Lovable, Bolt, V0, Replit  @Taye David Ibukun</p>
+          <p className="text-lg md:text-xl lg:text-2xl text-white/90 italic animate-fade-in" style={{
+            animationDelay: "0.2s"
+          }}>
+            Data Analyst skilled in Excel, PowerBI, Tableau, SQL & Python @Taye David Ibukun
+          </p>
         </div>
+        
+        <button 
+          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-2 border-white/40 flex items-center justify-center hover:border-white/60 hover:bg-white/5 transition-all duration-300 animate-fade-in"
+          style={{ animationDelay: "0.4s" }}
+          aria-label="Scroll to projects"
+        >
+          <ChevronDown className="w-6 h-6 text-white" />
+        </button>
       </section>
 
       {/* Projects Grid */}
