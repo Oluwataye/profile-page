@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/ProjectCard";
-import { Loader2, LogOut, Settings } from "lucide-react";
+import { Loader2, LogOut, Settings, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 interface Project {
@@ -121,8 +121,8 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Professional Portfolio
+          <h1 className="text-2xl font-bold text-foreground">
+            TAYE DAVID IBUKUN
           </h1>
           <div className="flex gap-2">
             {user ? (
@@ -152,15 +152,23 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[var(--gradient-hero)]" />
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in">
-            No-Code Web Apps
+      <section className="min-h-[90vh] flex items-center justify-center px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-background" />
+        <div className="container mx-auto max-w-5xl relative z-10 text-center">
+          <h2 className="text-6xl md:text-8xl font-bold mb-8 tracking-tight text-foreground animate-fade-in">
+            TAYEDATAINSIGHTS
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            Explore my collection of professional no-code web applications built for real-world solutions
+          <p className="text-xl md:text-2xl italic text-muted-foreground mb-12 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            Data Analyst skilled in Excel, PowerBI, Tableau, SQL & Python @Taye David Ibukun
           </p>
+          <button 
+            onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+            className="w-16 h-16 rounded-full border-2 border-foreground/30 hover:border-foreground/60 flex items-center justify-center mx-auto transition-all hover:scale-110 animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
+            aria-label="Scroll to projects"
+          >
+            <ChevronDown className="w-6 h-6 text-foreground/60" />
+          </button>
         </div>
       </section>
 
