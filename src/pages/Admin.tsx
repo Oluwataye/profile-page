@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, X, Image } from "lucide-react";
 
 interface Project {
   id: string;
@@ -17,6 +17,7 @@ interface Project {
   description: string;
   published: boolean;
   tech_stack: string[] | null;
+  thumbnail_url: string | null;
 }
 
 const Admin = () => {
@@ -37,6 +38,8 @@ const Admin = () => {
   });
   const [techStack, setTechStack] = useState<string[]>([]);
   const [newTech, setNewTech] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -86,14 +89,48 @@ const Admin = () => {
     }
   };
 
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnailFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
+      let thumbnail_url = null;
+
+      // Upload thumbnail if provided
+      if (thumbnailFile) {
+        const fileExt = thumbnailFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('project-images')
+          .upload(filePath, thumbnailFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-images')
+          .getPublicUrl(filePath);
+
+        thumbnail_url = publicUrl;
+      }
+
       const { error } = await supabase.from("projects").insert({
         ...formData,
         tech_stack: techStack.length > 0 ? techStack : null,
+        thumbnail_url,
       });
 
       if (error) throw error;
@@ -108,6 +145,8 @@ const Admin = () => {
         published: true,
       });
       setTechStack([]);
+      setThumbnailFile(null);
+      setThumbnailPreview(null);
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to add project");
@@ -213,6 +252,31 @@ const Admin = () => {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="thumbnail">Project Thumbnail</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="thumbnail"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleThumbnailChange}
+                      className="flex-1"
+                    />
+                    {thumbnailPreview && (
+                      <div className="relative w-20 h-20 rounded-md overflow-hidden border border-border">
+                        <img
+                          src={thumbnailPreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Upload an image to represent your project
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="project_url">Project URL</Label>
@@ -305,7 +369,16 @@ const Admin = () => {
               {projects.map((project) => (
                 <Card key={project.id}>
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-start gap-4">
+                      {project.thumbnail_url && (
+                        <div className="w-24 h-24 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                          <img
+                            src={project.thumbnail_url}
+                            alt={project.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="text-xl font-semibold">{project.title}</h3>
