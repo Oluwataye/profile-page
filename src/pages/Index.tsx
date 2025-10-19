@@ -131,18 +131,16 @@ const Index = () => {
             TAYEDATAINSIGHTS
           </h2>
           <p className="text-lg md:text-xl lg:text-2xl text-white/90 italic animate-fade-in" style={{
-            animationDelay: "0.2s"
-          }}>
-            Data Analyst skilled in Excel, PowerBI, Tableau, SQL & Python @Taye David Ibukun
-          </p>
+          animationDelay: "0.2s"
+        }}>Nocode Expert in Lovable, Bolt, V0, Replit  @Taye David Ibukun</p>
         </div>
         
-        <button 
-          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-2 border-white/40 flex items-center justify-center hover:border-white/60 hover:bg-white/5 transition-all duration-300 animate-fade-in"
-          style={{ animationDelay: "0.4s" }}
-          aria-label="Scroll to projects"
-        >
+        <button onClick={() => window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      })} className="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-2 border-white/40 flex items-center justify-center hover:border-white/60 hover:bg-white/5 transition-all duration-300 animate-fade-in" style={{
+        animationDelay: "0.4s"
+      }} aria-label="Scroll to projects">
           <ChevronDown className="w-6 h-6 text-white" />
         </button>
       </section>
