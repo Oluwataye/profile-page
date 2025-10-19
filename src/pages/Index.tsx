@@ -103,24 +103,6 @@ const Index = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             TAYE DAVID IBUKUN
           </h1>
-          <div className="flex gap-2">
-            {user ? <>
-                {isAdmin && <Link to="/admin">
-                    <Button variant="outline" size="sm">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Admin
-                    </Button>
-                  </Link>}
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              </> : <Link to="/auth">
-                <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                  Sign In
-                </Button>
-              </Link>}
-          </div>
         </div>
       </header>
 
@@ -161,7 +143,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t py-8 mt-20">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Professional Portfolio. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} T-Tech Solutions. All rights reserved.</p>
         </div>
       </footer>
     </div>;
