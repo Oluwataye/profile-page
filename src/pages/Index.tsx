@@ -24,7 +24,6 @@ const Index = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
-  
   const PROJECTS_PER_PAGE = 6;
   useEffect(() => {
     supabase.auth.getSession().then(({
@@ -64,29 +63,23 @@ const Index = () => {
   useEffect(() => {
     fetchProjects(0);
   }, []);
-  
   const fetchProjects = async (pageNum: number, append = false) => {
     try {
       if (append) {
         setLoadingMore(true);
       }
-      
       const from = pageNum * PROJECTS_PER_PAGE;
       const to = from + PROJECTS_PER_PAGE - 1;
-      
       const {
         data: projectsData,
         error,
         count
-      } = await supabase
-        .from("projects")
-        .select("*", { count: "exact" })
-        .eq("published", true)
-        .order("created_at", { ascending: false })
-        .range(from, to);
-      
+      } = await supabase.from("projects").select("*", {
+        count: "exact"
+      }).eq("published", true).order("created_at", {
+        ascending: false
+      }).range(from, to);
       if (error) throw error;
-      
       const projectsWithCounts = await Promise.all((projectsData || []).map(async project => {
         const [likesResult, commentsResult, likeResult] = await Promise.all([supabase.from("likes").select("*", {
           count: "exact",
@@ -104,13 +97,11 @@ const Index = () => {
           is_liked: !!likeResult.data
         };
       }));
-      
       if (append) {
         setProjects(prev => [...prev, ...projectsWithCounts]);
       } else {
         setProjects(projectsWithCounts);
       }
-      
       setHasMore((count || 0) > (pageNum + 1) * PROJECTS_PER_PAGE);
       setPage(pageNum);
     } catch (error: any) {
@@ -120,7 +111,6 @@ const Index = () => {
       setLoadingMore(false);
     }
   };
-  
   const handleLoadMore = () => {
     fetchProjects(page + 1, true);
   };
@@ -172,25 +162,14 @@ const Index = () => {
                 </div>)}
             </div>
             
-            {hasMore && (
-              <div className="flex justify-center mt-12">
-                <Button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  size="lg"
-                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg"
-                >
-                  {loadingMore ? (
-                    <>
+            {hasMore && <div className="flex justify-center mt-12">
+                <Button onClick={handleLoadMore} disabled={loadingMore} size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg">
+                  {loadingMore ? <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Loading...
-                    </>
-                  ) : (
-                    "Load More Projects"
-                  )}
+                    </> : "Load More Projects"}
                 </Button>
-              </div>
-            )}
+              </div>}
           </>}
       </section>
 
