@@ -21,5 +21,14 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_KEY': JSON.stringify(env.VITE_SUPABASE_KEY),
     },
+    build: {
+      outDir: "dist",
+      emptyOutDir: true, // Ensures dist is cleared before each build
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, "public/index.html"),
+        },
+      },
+    },
   };
 });
