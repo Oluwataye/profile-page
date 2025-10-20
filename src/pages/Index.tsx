@@ -23,6 +23,7 @@ const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const PROJECTS_PER_PAGE = 6;
   useEffect(() => {
@@ -62,7 +63,22 @@ const Index = () => {
   };
   useEffect(() => {
     fetchProjects(0);
+    fetchProfilePhoto();
   }, []);
+
+  const fetchProfilePhoto = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("profile_photo_url")
+        .single();
+
+      if (error) throw error;
+      setProfilePhotoUrl(data?.profile_photo_url || null);
+    } catch (error: any) {
+      console.error("Failed to load profile photo:", error);
+    }
+  };
   const fetchProjects = async (pageNum: number, append = false) => {
     try {
       if (append) {
@@ -131,6 +147,17 @@ const Index = () => {
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="container mx-auto max-w-5xl text-center space-y-8 mb-20">
+          {profilePhotoUrl && (
+            <div className="flex justify-center mb-8 animate-fade-in">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
+                <img
+                  src={profilePhotoUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
           <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight animate-fade-in">TAYE-NOCODE</h2>
           <p className="text-lg md:text-xl lg:text-2xl text-white/90 italic animate-fade-in" style={{
           animationDelay: "0.2s"

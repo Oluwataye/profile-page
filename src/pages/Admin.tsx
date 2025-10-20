@@ -43,6 +43,11 @@ const Admin = () => {
   const [newTech, setNewTech] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  
+  // Profile photo state
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -74,6 +79,23 @@ const Admin = () => {
 
     setIsAdmin(true);
     fetchProjects();
+    fetchSiteSettings();
+  };
+
+  const fetchSiteSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("profile_photo_url")
+        .single();
+
+      if (error) throw error;
+      if (data?.profile_photo_url) {
+        setProfilePhotoPreview(data.profile_photo_url);
+      }
+    } catch (error: any) {
+      console.error("Failed to load site settings:", error);
+    }
   };
 
   const fetchProjects = async () => {
@@ -101,6 +123,60 @@ const Admin = () => {
         setThumbnailPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfilePhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfilePhotoUpload = async () => {
+    if (!profilePhotoFile) {
+      toast.error("Please select a photo first");
+      return;
+    }
+
+    setUploadingProfile(true);
+
+    try {
+      // Upload to storage
+      const fileExt = profilePhotoFile.name.split('.').pop();
+      const fileName = `profile-photo-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('project-images')
+        .upload(fileName, profilePhotoFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('project-images')
+        .getPublicUrl(fileName);
+
+      // Update site settings
+      const { error: updateError } = await supabase
+        .from("site_settings")
+        .update({ profile_photo_url: publicUrl })
+        .eq("id", "00000000-0000-0000-0000-000000000001");
+
+      if (updateError) throw updateError;
+
+      toast.success("Profile photo updated successfully!");
+      setProfilePhotoFile(null);
+      fetchSiteSettings();
+    } catch (error: any) {
+      toast.error("Failed to upload profile photo");
+      console.error(error);
+    } finally {
+      setUploadingProfile(false);
     }
   };
 
@@ -300,6 +376,47 @@ const Admin = () => {
             Add Project
           </Button>
         </div>
+
+        {/* Profile Photo Management */}
+        <Card className="mb-8 shadow-[var(--shadow-elegant)]">
+          <CardHeader>
+            <CardTitle>Profile Photo</CardTitle>
+            <CardDescription>Manage the profile photo displayed on the public page</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6">
+              {profilePhotoPreview && (
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
+                  <img
+                    src={profilePhotoPreview}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1 space-y-3">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePhotoChange}
+                />
+                <Button 
+                  onClick={handleProfilePhotoUpload} 
+                  disabled={!profilePhotoFile || uploadingProfile}
+                >
+                  {uploadingProfile ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    "Update Profile Photo"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {showForm && (
           <Card className="mb-8 shadow-[var(--shadow-elegant)]">
