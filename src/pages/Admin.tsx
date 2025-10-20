@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2, X, Image } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, X, Image, Edit } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Project {
   id: string;
@@ -27,6 +28,8 @@ const Admin = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -192,6 +195,81 @@ const Admin = () => {
 
   const removeTech = (tech: string) => {
     setTechStack(techStack.filter((t) => t !== tech));
+  };
+
+  const handleEdit = (project: Project) => {
+    setEditingProject(project);
+    setFormData({
+      title: project.title,
+      description: project.description,
+      project_url: "",
+      demo_url: "",
+      published: project.published,
+    });
+    setTechStack(project.tech_stack || []);
+    setThumbnailPreview(project.thumbnail_url);
+    setShowEditDialog(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+    setSubmitting(true);
+
+    try {
+      let thumbnail_url = editingProject.thumbnail_url;
+
+      // Upload new thumbnail if provided
+      if (thumbnailFile) {
+        const fileExt = thumbnailFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('project-images')
+          .upload(filePath, thumbnailFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-images')
+          .getPublicUrl(filePath);
+
+        thumbnail_url = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from("projects")
+        .update({
+          title: formData.title,
+          description: formData.description,
+          published: formData.published,
+          tech_stack: techStack.length > 0 ? techStack : null,
+          thumbnail_url,
+        })
+        .eq("id", editingProject.id);
+
+      if (error) throw error;
+
+      toast.success("Project updated successfully!");
+      setShowEditDialog(false);
+      setEditingProject(null);
+      setFormData({
+        title: "",
+        description: "",
+        project_url: "",
+        demo_url: "",
+        published: true,
+      });
+      setTechStack([]);
+      setThumbnailFile(null);
+      setThumbnailPreview(null);
+      fetchProjects();
+    } catch (error: any) {
+      toast.error("Failed to update project");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -401,6 +479,13 @@ const Admin = () => {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleEdit(project)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => togglePublished(project.id, project.published)}
                         >
                           {project.published ? "Unpublish" : "Publish"}
@@ -420,6 +505,123 @@ const Admin = () => {
             </div>
           )}
         </div>
+
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Project</DialogTitle>
+              <DialogDescription>Update project details</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Project Title *</Label>
+                <Input
+                  id="edit-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description *</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-thumbnail">Project Thumbnail</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="edit-thumbnail"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="flex-1"
+                  />
+                  {thumbnailPreview && (
+                    <div className="relative w-20 h-20 rounded-md overflow-hidden border border-border">
+                      <img
+                        src={thumbnailPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-tech">Technologies</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="edit-tech"
+                    value={newTech}
+                    onChange={(e) => setNewTech(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTech())}
+                    placeholder="Add technology and press Enter"
+                  />
+                  <Button type="button" onClick={addTech} variant="outline">
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {techStack.map((tech) => (
+                    <Badge key={tech} variant="secondary">
+                      {tech}
+                      <button
+                        type="button"
+                        onClick={() => removeTech(tech)}
+                        className="ml-2 hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-published"
+                  checked={formData.published}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, published: checked })
+                  }
+                />
+                <Label htmlFor="edit-published">Published</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Project"
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingProject(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
