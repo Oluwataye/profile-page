@@ -141,6 +141,11 @@ const Index = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             TAYE DAVID IBUKUN
           </h1>
+          <nav className="hidden md:flex gap-6">
+            <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-colors">About</button>
+            <button onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-colors">Projects</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-colors">Contact</button>
+          </nav>
         </div>
       </header>
 
@@ -174,8 +179,53 @@ const Index = () => {
         </button>
       </section>
 
+      {/* About Section */}
+      <section id="about" className="py-20 bg-background/50">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">About Me</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-semibold text-foreground">Nocode Development Expert</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Specializing in rapid application development using cutting-edge nocode platforms including Lovable, Bolt, V0, and Replit. 
+                I transform ideas into functional, scalable applications without traditional coding barriers.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                With expertise in modern development workflows, I deliver high-quality solutions for startups, enterprises, 
+                and individual clients looking to innovate quickly and efficiently.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-2xl font-semibold text-foreground">What I Offer</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <span className="text-muted-foreground">Rapid MVP Development & Prototyping</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <span className="text-muted-foreground">Full-Stack Application Development</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <span className="text-muted-foreground">Database Design & Integration</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <span className="text-muted-foreground">UI/UX Implementation</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                  <span className="text-muted-foreground">Consulting & Technical Partnership</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Projects Grid */}
-      <section className="container mx-auto px-4 py-16">
+      <section id="projects" className="container mx-auto px-4 py-16">
         {loading ? <div className="flex justify-center items-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div> : projects.length === 0 ? <div className="text-center py-20">
@@ -200,8 +250,65 @@ const Index = () => {
           </>}
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Get In Touch</h2>
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-semibold text-foreground mb-4">Let's Work Together</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Whether you're a startup looking to build your MVP, an enterprise seeking innovation, 
+                  or an investor exploring opportunities, I'd love to hear from you.
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-semibold">@</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="text-foreground font-medium">contact@taye-nocode.com</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                    <span className="text-accent font-semibold">#</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Available For</p>
+                    <p className="text-foreground font-medium">Projects • Partnerships • Consulting</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card border rounded-lg p-6 shadow-lg">
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); toast.success("Thanks for reaching out! I'll get back to you soon."); }}>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">Name</label>
+                  <input type="text" id="name" required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary bg-background text-foreground" />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email</label>
+                  <input type="email" id="email" required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary bg-background text-foreground" />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">Message</label>
+                  <textarea id="message" rows={4} required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary bg-background text-foreground resize-none"></textarea>
+                </div>
+                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all">
+                  Send Message
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t py-8 mt-20">
+      <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} T-Tech Solutions. All rights reserved.</p>
         </div>
