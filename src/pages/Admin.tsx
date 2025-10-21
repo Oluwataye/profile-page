@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2, X, Image, Edit } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Loader2, X, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Project {
@@ -22,7 +23,7 @@ interface Project {
 }
 
 const Admin = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth(); // Use the useAuth hook
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -70,36 +71,40 @@ const Admin = () => {
   const [savingContent, setSavingContent] = useState(false);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    if (user) {
+      checkAdminRole();
+    }
+  }, [user]);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      toast.error("Please sign in to access admin panel");
-      navigate("/auth");
+  const checkAdminRole = async () => {
+    if (!user) {
+      setLoading(false);
       return;
     }
 
-    setUser(session.user);
+    try {
+      const { data: roleData, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .single();
 
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .eq("role", "admin")
-      .single();
+      if (error || !roleData) {
+        toast.error("Unauthorized: Admin access required");
+        navigate("/");
+        return;
+      }
 
-    if (!roleData) {
-      toast.error("Unauthorized: Admin access required");
+      setIsAdmin(true);
+      await Promise.all([fetchProjects(), fetchSiteSettings()]);
+    } catch (error) {
+      console.error("Auth check error:", error);
+      toast.error("Failed to verify admin access");
       navigate("/");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setIsAdmin(true);
-    fetchProjects();
-    fetchSiteSettings();
   };
 
   const fetchSiteSettings = async () => {
@@ -131,6 +136,7 @@ const Admin = () => {
       }
     } catch (error: any) {
       console.error("Failed to load site settings:", error);
+      toast.error("Failed to load site settings");
     }
   };
 
@@ -145,8 +151,7 @@ const Admin = () => {
       setProjects(data || []);
     } catch (error: any) {
       toast.error("Failed to load projects");
-    } finally {
-      setLoading(false);
+      console.error(error);
     }
   };
 
@@ -265,6 +270,7 @@ const Admin = () => {
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to add project");
+      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -280,6 +286,7 @@ const Admin = () => {
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to delete project");
+      console.error(error);
     }
   };
 
@@ -295,6 +302,7 @@ const Admin = () => {
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to update project");
+      console.error(error);
     }
   };
 
@@ -379,6 +387,7 @@ const Admin = () => {
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to update project");
+      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -422,6 +431,16 @@ const Admin = () => {
     });
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -430,7 +449,23 @@ const Admin = () => {
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>You don't have admin privileges</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/")} className="w-full">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-primary/5">
@@ -445,10 +480,15 @@ const Admin = () => {
               Admin Dashboard
             </h1>
           </div>
-          <Button onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Project
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowForm(!showForm)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Project
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Page Content Management */}
@@ -817,184 +857,4 @@ const Admin = () => {
               {projects.map((project) => (
                 <Card key={project.id}>
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-start gap-4">
-                      {project.thumbnail_url && (
-                        <div className="w-24 h-24 rounded-lg overflow-hidden border border-border flex-shrink-0">
-                          <img
-                            src={project.thumbnail_url}
-                            alt={project.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold">{project.title}</h3>
-                          <Badge variant={project.published ? "default" : "secondary"}>
-                            {project.published ? "Published" : "Draft"}
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground mb-4">{project.description}</p>
-                        {project.tech_stack && project.tech_stack.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {project.tech_stack.map((tech, index) => (
-                              <Badge key={index} variant="outline">
-                                {tech}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(project)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => togglePublished(project.id, project.published)}
-                        >
-                          {project.published ? "Unpublish" : "Publish"}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(project.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Project</DialogTitle>
-              <DialogDescription>Update project details</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">Project Title *</Label>
-                <Input
-                  id="edit-title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description *</Label>
-                <Textarea
-                  id="edit-description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-thumbnail">Project Thumbnail</Label>
-                <div className="flex items-center gap-4">
-                  <Input
-                    id="edit-thumbnail"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleThumbnailChange}
-                    className="flex-1"
-                  />
-                  {thumbnailPreview && (
-                    <div className="relative w-20 h-20 rounded-md overflow-hidden border border-border">
-                      <img
-                        src={thumbnailPreview}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-tech">Technologies</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="edit-tech"
-                    value={newTech}
-                    onChange={(e) => setNewTech(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTech())}
-                    placeholder="Add technology and press Enter"
-                  />
-                  <Button type="button" onClick={addTech} variant="outline">
-                    Add
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {techStack.map((tech) => (
-                    <Badge key={tech} variant="secondary">
-                      {tech}
-                      <button
-                        type="button"
-                        onClick={() => removeTech(tech)}
-                        className="ml-2 hover:text-destructive"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="edit-published"
-                  checked={formData.published}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, published: checked })
-                  }
-                />
-                <Label htmlFor="edit-published">Published</Label>
-              </div>
-
-              <div className="flex gap-2">
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Project"
-                  )}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowEditDialog(false);
-                    setEditingProject(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
-};
-
-export default Admin;
+                    <div className="flex justify-between items-start gap
