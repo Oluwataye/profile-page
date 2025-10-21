@@ -24,6 +24,22 @@ const Index = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [siteContent, setSiteContent] = useState({
+    hero_heading: "TAYE-NOCODE",
+    hero_subtitle: "Nocode Expert in Lovable, Bolt, V0, Replit @Taye David Ibukun",
+    about_title: "About Me",
+    about_left_heading: "Nocode Development Expert",
+    about_left_paragraph1: "",
+    about_left_paragraph2: "",
+    about_right_heading: "What I Offer",
+    about_services: [] as string[],
+    contact_title: "Get In Touch",
+    contact_heading: "Let's Work Together",
+    contact_description: "",
+    contact_email: "contact@taye-nocode.com",
+    contact_availability: "Projects • Partnerships • Consulting",
+    footer_text: "T-Tech Solutions",
+  });
   const navigate = useNavigate();
   const PROJECTS_PER_PAGE = 6;
   useEffect(() => {
@@ -70,13 +86,31 @@ const Index = () => {
     try {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("profile_photo_url")
+        .select("*")
         .single();
 
       if (error) throw error;
-      setProfilePhotoUrl(data?.profile_photo_url || null);
+      if (data) {
+        setProfilePhotoUrl(data.profile_photo_url || null);
+        setSiteContent({
+          hero_heading: data.hero_heading || "TAYE-NOCODE",
+          hero_subtitle: data.hero_subtitle || "Nocode Expert in Lovable, Bolt, V0, Replit @Taye David Ibukun",
+          about_title: data.about_title || "About Me",
+          about_left_heading: data.about_left_heading || "Nocode Development Expert",
+          about_left_paragraph1: data.about_left_paragraph1 || "",
+          about_left_paragraph2: data.about_left_paragraph2 || "",
+          about_right_heading: data.about_right_heading || "What I Offer",
+          about_services: (Array.isArray(data.about_services) ? data.about_services : []) as string[],
+          contact_title: data.contact_title || "Get In Touch",
+          contact_heading: data.contact_heading || "Let's Work Together",
+          contact_description: data.contact_description || "",
+          contact_email: data.contact_email || "contact@taye-nocode.com",
+          contact_availability: data.contact_availability || "Projects • Partnerships • Consulting",
+          footer_text: data.footer_text || "T-Tech Solutions",
+        });
+      }
     } catch (error: any) {
-      console.error("Failed to load profile photo:", error);
+      console.error("Failed to load site settings:", error);
     }
   };
   const fetchProjects = async (pageNum: number, append = false) => {
@@ -182,42 +216,30 @@ const Index = () => {
       {/* About Section */}
       <section id="about" className="py-20 bg-background/50">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">About Me</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{siteContent.about_title}</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="text-2xl font-semibold text-foreground">Nocode Development Expert</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Specializing in rapid application development using cutting-edge nocode platforms including Lovable, Bolt, V0, and Replit. 
-                I transform ideas into functional, scalable applications without traditional coding barriers.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                With expertise in modern development workflows, I deliver high-quality solutions for startups, enterprises, 
-                and individual clients looking to innovate quickly and efficiently.
-              </p>
+              <h3 className="text-2xl font-semibold text-foreground">{siteContent.about_left_heading}</h3>
+              {siteContent.about_left_paragraph1 && (
+                <p className="text-muted-foreground leading-relaxed">
+                  {siteContent.about_left_paragraph1}
+                </p>
+              )}
+              {siteContent.about_left_paragraph2 && (
+                <p className="text-muted-foreground leading-relaxed">
+                  {siteContent.about_left_paragraph2}
+                </p>
+              )}
             </div>
             <div className="space-y-4">
-              <h3 className="text-2xl font-semibold text-foreground">What I Offer</h3>
+              <h3 className="text-2xl font-semibold text-foreground">{siteContent.about_right_heading}</h3>
               <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                  <span className="text-muted-foreground">Rapid MVP Development & Prototyping</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                  <span className="text-muted-foreground">Full-Stack Application Development</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                  <span className="text-muted-foreground">Database Design & Integration</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                  <span className="text-muted-foreground">UI/UX Implementation</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
-                  <span className="text-muted-foreground">Consulting & Technical Partnership</span>
-                </li>
+                {siteContent.about_services.map((service, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                    <span className="text-muted-foreground">{service}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -253,14 +275,13 @@ const Index = () => {
       {/* Contact Section */}
       <section id="contact" className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Get In Touch</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{siteContent.contact_title}</h2>
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-6">
               <div>
-                <h3 className="text-2xl font-semibold text-foreground mb-4">Let's Work Together</h3>
+                <h3 className="text-2xl font-semibold text-foreground mb-4">{siteContent.contact_heading}</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Whether you're a startup looking to build your MVP, an enterprise seeking innovation, 
-                  or an investor exploring opportunities, I'd love to hear from you.
+                  {siteContent.contact_description}
                 </p>
               </div>
               <div className="space-y-4">
@@ -270,7 +291,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="text-foreground font-medium">contact@taye-nocode.com</p>
+                    <p className="text-foreground font-medium">{siteContent.contact_email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -279,7 +300,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Available For</p>
-                    <p className="text-foreground font-medium">Projects • Partnerships • Consulting</p>
+                    <p className="text-foreground font-medium">{siteContent.contact_availability}</p>
                   </div>
                 </div>
               </div>
@@ -310,7 +331,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} T-Tech Solutions. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {siteContent.footer_text}. All rights reserved.</p>
         </div>
       </footer>
     </div>;

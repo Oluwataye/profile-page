@@ -159,19 +159,61 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          about_left_heading: string | null
+          about_left_paragraph1: string | null
+          about_left_paragraph2: string | null
+          about_right_heading: string | null
+          about_services: Json | null
+          about_title: string | null
+          contact_availability: string | null
+          contact_description: string | null
+          contact_email: string | null
+          contact_heading: string | null
+          contact_title: string | null
           created_at: string
+          footer_text: string | null
+          hero_heading: string | null
+          hero_subtitle: string | null
           id: string
           profile_photo_url: string | null
           updated_at: string
         }
         Insert: {
+          about_left_heading?: string | null
+          about_left_paragraph1?: string | null
+          about_left_paragraph2?: string | null
+          about_right_heading?: string | null
+          about_services?: Json | null
+          about_title?: string | null
+          contact_availability?: string | null
+          contact_description?: string | null
+          contact_email?: string | null
+          contact_heading?: string | null
+          contact_title?: string | null
           created_at?: string
+          footer_text?: string | null
+          hero_heading?: string | null
+          hero_subtitle?: string | null
           id?: string
           profile_photo_url?: string | null
           updated_at?: string
         }
         Update: {
+          about_left_heading?: string | null
+          about_left_paragraph1?: string | null
+          about_left_paragraph2?: string | null
+          about_right_heading?: string | null
+          about_services?: Json | null
+          about_title?: string | null
+          contact_availability?: string | null
+          contact_description?: string | null
+          contact_email?: string | null
+          contact_heading?: string | null
+          contact_title?: string | null
           created_at?: string
+          footer_text?: string | null
+          hero_heading?: string | null
+          hero_subtitle?: string | null
           id?: string
           profile_photo_url?: string | null
           updated_at?: string

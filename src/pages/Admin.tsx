@@ -49,6 +49,26 @@ const Admin = () => {
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
 
+  // Site content state
+  const [siteContent, setSiteContent] = useState({
+    hero_heading: "",
+    hero_subtitle: "",
+    about_title: "",
+    about_left_heading: "",
+    about_left_paragraph1: "",
+    about_left_paragraph2: "",
+    about_right_heading: "",
+    about_services: [] as string[],
+    contact_title: "",
+    contact_heading: "",
+    contact_description: "",
+    contact_email: "",
+    contact_availability: "",
+    footer_text: "",
+  });
+  const [newService, setNewService] = useState("");
+  const [savingContent, setSavingContent] = useState(false);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -86,12 +106,28 @@ const Admin = () => {
     try {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("profile_photo_url")
+        .select("*")
         .single();
 
       if (error) throw error;
-      if (data?.profile_photo_url) {
+      if (data) {
         setProfilePhotoPreview(data.profile_photo_url);
+        setSiteContent({
+          hero_heading: data.hero_heading || "",
+          hero_subtitle: data.hero_subtitle || "",
+          about_title: data.about_title || "",
+          about_left_heading: data.about_left_heading || "",
+          about_left_paragraph1: data.about_left_paragraph1 || "",
+          about_left_paragraph2: data.about_left_paragraph2 || "",
+          about_right_heading: data.about_right_heading || "",
+          about_services: (Array.isArray(data.about_services) ? data.about_services : []) as string[],
+          contact_title: data.contact_title || "",
+          contact_heading: data.contact_heading || "",
+          contact_description: data.contact_description || "",
+          contact_email: data.contact_email || "",
+          contact_availability: data.contact_availability || "",
+          footer_text: data.footer_text || "",
+        });
       }
     } catch (error: any) {
       console.error("Failed to load site settings:", error);
@@ -348,6 +384,44 @@ const Admin = () => {
     }
   };
 
+  const handleSaveContent = async () => {
+    setSavingContent(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .update({
+          ...siteContent,
+          about_services: siteContent.about_services,
+        })
+        .eq("id", "00000000-0000-0000-0000-000000000001");
+
+      if (error) throw error;
+      toast.success("Page content updated successfully!");
+    } catch (error: any) {
+      toast.error("Failed to update content");
+      console.error(error);
+    } finally {
+      setSavingContent(false);
+    }
+  };
+
+  const addService = () => {
+    if (newService.trim() && !siteContent.about_services.includes(newService.trim())) {
+      setSiteContent({
+        ...siteContent,
+        about_services: [...siteContent.about_services, newService.trim()],
+      });
+      setNewService("");
+    }
+  };
+
+  const removeService = (service: string) => {
+    setSiteContent({
+      ...siteContent,
+      about_services: siteContent.about_services.filter((s) => s !== service),
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -377,44 +451,223 @@ const Admin = () => {
           </Button>
         </div>
 
-        {/* Profile Photo Management */}
+        {/* Page Content Management */}
         <Card className="mb-8 shadow-[var(--shadow-elegant)]">
           <CardHeader>
-            <CardTitle>Profile Photo</CardTitle>
-            <CardDescription>Manage the profile photo displayed on the public page</CardDescription>
+            <CardTitle>Page Content Management</CardTitle>
+            <CardDescription>Edit all sections of the public page</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-6">
-              {profilePhotoPreview && (
-                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
-                  <img
-                    src={profilePhotoPreview}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
+          <CardContent className="space-y-8">
+            {/* Profile Photo */}
+            <div className="pb-6 border-b">
+              <h3 className="text-lg font-semibold mb-4">Profile Photo</h3>
+              <div className="flex items-center gap-6">
+                {profilePhotoPreview && (
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary">
+                    <img
+                      src={profilePhotoPreview}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1 space-y-3">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePhotoChange}
                   />
+                  <Button 
+                    onClick={handleProfilePhotoUpload} 
+                    disabled={!profilePhotoFile || uploadingProfile}
+                    size="sm"
+                  >
+                    {uploadingProfile ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      "Update Profile Photo"
+                    )}
+                  </Button>
                 </div>
-              )}
-              <div className="flex-1 space-y-3">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePhotoChange}
-                />
-                <Button 
-                  onClick={handleProfilePhotoUpload} 
-                  disabled={!profilePhotoFile || uploadingProfile}
-                >
-                  {uploadingProfile ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    "Update Profile Photo"
-                  )}
-                </Button>
               </div>
             </div>
+
+            {/* Hero Section */}
+            <div className="pb-6 border-b">
+              <h3 className="text-lg font-semibold mb-4">Hero Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="hero_heading">Main Heading</Label>
+                  <Input
+                    id="hero_heading"
+                    value={siteContent.hero_heading}
+                    onChange={(e) => setSiteContent({ ...siteContent, hero_heading: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hero_subtitle">Subtitle</Label>
+                  <Input
+                    id="hero_subtitle"
+                    value={siteContent.hero_subtitle}
+                    onChange={(e) => setSiteContent({ ...siteContent, hero_subtitle: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* About Section */}
+            <div className="pb-6 border-b">
+              <h3 className="text-lg font-semibold mb-4">About Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="about_title">Section Title</Label>
+                  <Input
+                    id="about_title"
+                    value={siteContent.about_title}
+                    onChange={(e) => setSiteContent({ ...siteContent, about_title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="about_left_heading">Left Column Heading</Label>
+                  <Input
+                    id="about_left_heading"
+                    value={siteContent.about_left_heading}
+                    onChange={(e) => setSiteContent({ ...siteContent, about_left_heading: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="about_left_paragraph1">Left Column - Paragraph 1</Label>
+                  <Textarea
+                    id="about_left_paragraph1"
+                    value={siteContent.about_left_paragraph1}
+                    onChange={(e) => setSiteContent({ ...siteContent, about_left_paragraph1: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="about_left_paragraph2">Left Column - Paragraph 2</Label>
+                  <Textarea
+                    id="about_left_paragraph2"
+                    value={siteContent.about_left_paragraph2}
+                    onChange={(e) => setSiteContent({ ...siteContent, about_left_paragraph2: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="about_right_heading">Right Column Heading</Label>
+                  <Input
+                    id="about_right_heading"
+                    value={siteContent.about_right_heading}
+                    onChange={(e) => setSiteContent({ ...siteContent, about_right_heading: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Services List</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={newService}
+                      onChange={(e) => setNewService(e.target.value)}
+                      placeholder="Add a service"
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addService())}
+                    />
+                    <Button type="button" onClick={addService} size="sm">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {siteContent.about_services.map((service, idx) => (
+                      <Badge key={idx} variant="secondary" className="flex items-center gap-2">
+                        {service}
+                        <X
+                          className="w-3 h-3 cursor-pointer"
+                          onClick={() => removeService(service)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Section */}
+            <div className="pb-6 border-b">
+              <h3 className="text-lg font-semibold mb-4">Contact Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="contact_title">Section Title</Label>
+                  <Input
+                    id="contact_title"
+                    value={siteContent.contact_title}
+                    onChange={(e) => setSiteContent({ ...siteContent, contact_title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact_heading">Heading</Label>
+                  <Input
+                    id="contact_heading"
+                    value={siteContent.contact_heading}
+                    onChange={(e) => setSiteContent({ ...siteContent, contact_heading: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact_description">Description</Label>
+                  <Textarea
+                    id="contact_description"
+                    value={siteContent.contact_description}
+                    onChange={(e) => setSiteContent({ ...siteContent, contact_description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact_email">Email Address</Label>
+                  <Input
+                    id="contact_email"
+                    type="email"
+                    value={siteContent.contact_email}
+                    onChange={(e) => setSiteContent({ ...siteContent, contact_email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact_availability">Available For</Label>
+                  <Input
+                    id="contact_availability"
+                    value={siteContent.contact_availability}
+                    onChange={(e) => setSiteContent({ ...siteContent, contact_availability: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Section */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Footer</h3>
+              <div>
+                <Label htmlFor="footer_text">Company/Brand Name</Label>
+                <Input
+                  id="footer_text"
+                  value={siteContent.footer_text}
+                  onChange={(e) => setSiteContent({ ...siteContent, footer_text: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleSaveContent} 
+              disabled={savingContent}
+              className="w-full"
+            >
+              {savingContent ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save All Changes"
+              )}
+            </Button>
           </CardContent>
         </Card>
 
