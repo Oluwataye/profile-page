@@ -92,6 +92,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -99,23 +100,49 @@ const Auth = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // Check if user is admin to redirect appropriately
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        navigate(roleData ? "/admin" : "/");
+        // Only redirect if we have a valid, non-expired session
+        if (session && !error) {
+          // Verify the session is still valid by checking the user
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (user && !userError) {
+            // Check if user is admin to redirect appropriately
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.id)
+              .eq('role', 'admin')
+              .maybeSingle();
+            
+            navigate(roleData ? "/admin" : "/");
+          } else {
+            // Session exists but user is invalid - clear it
+            await supabase.auth.signOut();
+          }
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        // If there's any error, ensure we're logged out
+        await supabase.auth.signOut();
+      } finally {
+        setCheckingSession(false);
       }
     };
 
     checkSession();
   }, [navigate]);
+
+  // Show loading while checking for existing session
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // Security: Input sanitization - remove potential XSS vectors
   const sanitizeInput = (input: string): string => {
@@ -260,6 +287,16 @@ const Auth = () => {
     setPassword("");
     setConfirmPassword("");
     setFullName("");
+  };
+
+  const handleClearSession = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Session cleared successfully");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to clear session");
+    }
   };
 
   return (
@@ -422,6 +459,17 @@ const Auth = () => {
               disabled={loading}
             >
               {isLogin ? "Need an account? Sign up securely" : "Already have an account? Sign in"}
+            </button>
+          </div>
+
+          <div className="mt-2 text-center">
+            <button
+              type="button"
+              onClick={handleClearSession}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              disabled={loading}
+            >
+              Having issues? Clear session and retry
             </button>
           </div>
 
