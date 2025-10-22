@@ -103,29 +103,18 @@ const Auth = () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        // Only redirect if we have a valid, non-expired session
+        // Clean up invalid sessions but don't auto-redirect
+        // This allows users to access /auth page regardless of login state
         if (session && !error) {
-          // Verify the session is still valid by checking the user
           const { data: { user }, error: userError } = await supabase.auth.getUser();
           
-          if (user && !userError) {
-            // Check if user is admin to redirect appropriately
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user.id)
-              .eq('role', 'admin')
-              .maybeSingle();
-            
-            navigate(roleData ? "/admin" : "/");
-          } else {
+          if (!user || userError) {
             // Session exists but user is invalid - clear it
             await supabase.auth.signOut();
           }
         }
       } catch (error) {
         console.error('Session check error:', error);
-        // If there's any error, ensure we're logged out
         await supabase.auth.signOut();
       } finally {
         setCheckingSession(false);
