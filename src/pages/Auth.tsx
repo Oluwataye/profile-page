@@ -98,11 +98,23 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
-        navigate("/");
+        // Check if user is admin to redirect appropriately
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        navigate(roleData ? "/admin" : "/");
       }
-    });
+    };
+
+    checkSession();
   }, [navigate]);
 
   // Security: Input sanitization - remove potential XSS vectors
@@ -190,8 +202,19 @@ const Auth = () => {
         // Security: Reset attempts on successful login
         rateLimiter.resetAttempts(sanitizedEmail);
         
-        toast.success("Welcome back!");
-        navigate("/");
+        // Check if user is admin to redirect appropriately
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          
+          toast.success("Welcome back!");
+          navigate(roleData ? "/admin" : "/");
+        }
       } else {
         // Security: Double-check password match
         if (password !== confirmPassword) {

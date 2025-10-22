@@ -23,8 +23,7 @@ interface Project {
 }
 
 const Admin = () => {
-  const { user } = useAuth(); // Use the useAuth hook
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -71,37 +70,17 @@ const Admin = () => {
   const [savingContent, setSavingContent] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      checkAdminRole();
+    if (user && isAdmin) {
+      initializeAdminData();
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
-  const checkAdminRole = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
+  const initializeAdminData = async () => {
     try {
-      const { data: roleData, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
-
-      if (error || !roleData) {
-        toast.error("Unauthorized: Admin access required");
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
       await Promise.all([fetchProjects(), fetchSiteSettings()]);
     } catch (error) {
-      console.error("Auth check error:", error);
-      toast.error("Failed to verify admin access");
-      navigate("/");
+      console.error("Error initializing admin data:", error);
+      toast.error("Failed to load admin data");
     } finally {
       setLoading(false);
     }
@@ -445,24 +424,6 @@ const Admin = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>You don't have admin privileges</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/")} className="w-full">
-              Return to Home
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -857,4 +818,182 @@ const Admin = () => {
               {projects.map((project) => (
                 <Card key={project.id}>
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-start gap
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-xl font-semibold">{project.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={project.published ? "default" : "secondary"}>
+                              {project.published ? "Published" : "Draft"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="text-muted-foreground mb-4">{project.description}</p>
+                        {project.tech_stack && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {project.tech_stack.map((tech) => (
+                              <Badge key={tech} variant="outline">
+                                {tech}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(project)}
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => togglePublished(project.id, project.published)}
+                          >
+                            {project.published ? "Unpublish" : "Publish"}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(project.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                      {project.thumbnail_url && (
+                        <div className="w-32 h-32 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                          <img
+                            src={project.thumbnail_url}
+                            alt={project.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Edit Project Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Project</DialogTitle>
+              <DialogDescription>Update project details</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Project Title *</Label>
+                <Input
+                  id="edit-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description *</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-thumbnail">Project Thumbnail</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="edit-thumbnail"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="flex-1"
+                  />
+                  {thumbnailPreview && (
+                    <div className="relative w-20 h-20 rounded-md overflow-hidden border border-border">
+                      <img
+                        src={thumbnailPreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-tech">Technologies</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="edit-tech"
+                    value={newTech}
+                    onChange={(e) => setNewTech(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTech())}
+                    placeholder="Add technology and press Enter"
+                  />
+                  <Button type="button" onClick={addTech} variant="outline">
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {techStack.map((tech) => (
+                    <Badge key={tech} variant="secondary">
+                      {tech}
+                      <button
+                        type="button"
+                        onClick={() => removeTech(tech)}
+                        className="ml-2 hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-published"
+                  checked={formData.published}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, published: checked })
+                  }
+                />
+                <Label htmlFor="edit-published">Published</Label>
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Project"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
