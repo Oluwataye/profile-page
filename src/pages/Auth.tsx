@@ -96,7 +96,38 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [authSuccess, setAuthSuccess] = useState(false);
   const navigate = useNavigate();
+
+  // Handle navigation after successful authentication
+  useEffect(() => {
+    if (!authSuccess) return;
+
+    const checkAuthAndRedirect = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Wait a bit for auth state to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .eq('role', 'admin')
+            .maybeSingle();
+          
+          navigate(roleData ? "/admin" : "/", { replace: true });
+        }
+      } catch (error) {
+        console.error('Redirect error:', error);
+        navigate("/", { replace: true });
+      }
+    };
+
+    checkAuthAndRedirect();
+  }, [authSuccess, navigate]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -218,19 +249,8 @@ const Auth = () => {
         // Security: Reset attempts on successful login
         rateLimiter.resetAttempts(sanitizedEmail);
         
-        // Check if user is admin to redirect appropriately
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .eq('role', 'admin')
-            .maybeSingle();
-          
-          toast.success("Welcome back!");
-          navigate(roleData ? "/admin" : "/");
-        }
+        toast.success("Welcome back!");
+        setAuthSuccess(true);
       } else {
         // Security: Double-check password match
         if (password !== confirmPassword) {
