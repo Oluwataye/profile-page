@@ -105,20 +105,26 @@ const Auth = () => {
 
     const checkAuthAndRedirect = async () => {
       try {
+        // Wait for auth state to fully propagate through useAuth hook
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Wait for auth state to fully propagate
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const { data: roleData } = await supabase
+          const { data: roleData, error } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', session.user.id)
             .eq('role', 'admin')
             .maybeSingle();
           
-          navigate(roleData ? "/admin" : "/", { replace: true });
+          if (error) {
+            console.error('Role check error:', error);
+          }
+          
+          const targetRoute = roleData ? "/admin" : "/";
+          console.log('Navigating to:', targetRoute, 'Admin role:', !!roleData);
+          navigate(targetRoute, { replace: true });
         }
       } catch (error) {
         console.error('Redirect error:', error);
