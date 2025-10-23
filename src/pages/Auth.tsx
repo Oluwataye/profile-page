@@ -105,26 +105,18 @@ const Auth = () => {
 
     const checkAuthAndRedirect = async () => {
       try {
-        // Wait for auth state to fully propagate through useAuth hook
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { data: roleData, error } = await supabase
+          const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', session.user.id)
             .eq('role', 'admin')
             .maybeSingle();
           
-          if (error) {
-            console.error('Role check error:', error);
-          }
-          
-          const targetRoute = roleData ? "/admin" : "/";
-          console.log('Navigating to:', targetRoute, 'Admin role:', !!roleData);
-          navigate(targetRoute, { replace: true });
+          // Direct navigation - let ProtectedRoute handle any access control
+          navigate(roleData ? "/admin" : "/", { replace: true });
         }
       } catch (error) {
         console.error('Redirect error:', error);
