@@ -108,8 +108,8 @@ const Auth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Wait a bit for auth state to propagate
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait for auth state to fully propagate
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
           const { data: roleData } = await supabase
             .from('user_roles')

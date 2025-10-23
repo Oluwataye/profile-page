@@ -18,17 +18,17 @@ export const useAuth = (): UseAuthReturn => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         // Check admin role when session changes
         if (currentSession?.user) {
-          setTimeout(() => {
-            checkAdminRole(currentSession.user.id);
-          }, 0);
+          setLoading(true);
+          await checkAdminRole(currentSession.user.id);
         } else {
           setIsAdmin(false);
+          setLoading(false);
         }
       }
     );
