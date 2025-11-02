@@ -249,7 +249,7 @@ const Index = () => {
             </Button>
             <Button size="lg" variant="outline" onClick={() => document.getElementById('contact')?.scrollIntoView({
             behavior: 'smooth'
-          })} className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all hover:scale-105 text-lg px-8">
+          })} className="border-2 border-white/30 hover:bg-white/10 hover:border-white/50 transition-all hover:scale-105 text-lg px-8 text-black/0">
               Let's Talk
             </Button>
           </div>
