@@ -484,9 +484,6 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-center md:text-left">
-              <h3 className="text-xl font-bold bg-gradient-to-r from-primary via-accent to-secondary-accent bg-clip-text text-transparent mb-2">
-                TAYE DAVID IBUKUN
-              </h3>
               <p className="text-muted-foreground">
                 &copy; {new Date().getFullYear()} {siteContent.footer_text}. All rights reserved.
               </p>
