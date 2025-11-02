@@ -209,7 +209,7 @@ const Index = () => {
         <div className="container mx-auto max-w-5xl text-center space-y-6 mb-20 relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4 animate-fade-in">
             <Zap className="w-4 h-4 text-accent" />
-            <span className="text-sm text-white/90 font-medium">Available for new projects • Fast turnaround</span>
+            <span className="text-sm font-medium text-[#e55a42]/95">Available for new projects • Fast turnaround</span>
           </div>
 
           {profilePhotoUrl && <div className="flex justify-center mb-8 animate-scale-in" style={{
