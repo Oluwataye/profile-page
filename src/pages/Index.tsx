@@ -228,9 +228,9 @@ const Index = () => {
         }} className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight animate-fade-in text-blue-600">
             {siteContent.hero_heading}
           </h2>
-          <p className="text-xl md:text-2xl lg:text-3xl text-white/90 font-medium max-w-3xl mx-auto animate-fade-in" style={{
+          <p style={{
           animationDelay: "0.3s"
-        }}>
+        }} className="text-xl md:text-2xl lg:text-3xl font-medium max-w-3xl mx-auto animate-fade-in text-[#ae09a9]/[0.58]">
             {siteContent.hero_subtitle}
           </p>
           <p className="text-lg md:text-xl text-accent/90 font-semibold animate-fade-in" style={{
