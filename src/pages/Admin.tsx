@@ -72,6 +72,19 @@ const Admin = () => {
   const [newService, setNewService] = useState("");
   const [savingContent, setSavingContent] = useState(false);
 
+  // Settings state
+  const [settingsData, setSettingsData] = useState({
+    site_title: "",
+    site_description: "",
+    site_keywords: "",
+    social_github: "",
+    social_linkedin: "",
+    social_twitter: "",
+    google_analytics: "",
+    maintenance_mode: false,
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+
   useEffect(() => {
     if (user && isAdmin) {
       initializeAdminData();
@@ -114,6 +127,16 @@ const Admin = () => {
           contact_email: data.contact_email || "",
           contact_availability: data.contact_availability || "",
           footer_text: data.footer_text || "",
+        });
+        setSettingsData({
+          site_title: data.site_title || "",
+          site_description: data.site_description || "",
+          site_keywords: data.site_keywords || "",
+          social_github: data.social_github || "",
+          social_linkedin: data.social_linkedin || "",
+          social_twitter: data.social_twitter || "",
+          google_analytics: data.google_analytics || "",
+          maintenance_mode: data.maintenance_mode || false,
         });
       }
     } catch (error: any) {
@@ -407,6 +430,24 @@ const Admin = () => {
       ...siteContent,
       about_services: siteContent.about_services.filter((s) => s !== service),
     });
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from("site_settings")
+        .update(settingsData)
+        .eq("id", "00000000-0000-0000-0000-000000000001");
+
+      if (error) throw error;
+      toast.success("Settings updated successfully!");
+    } catch (error: any) {
+      toast.error("Failed to update settings");
+      console.error(error);
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -911,15 +952,158 @@ const Admin = () => {
 
             {/* Settings Section */}
             {activeSection === "settings" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Admin Settings</CardTitle>
-                  <CardDescription>Configure your admin preferences</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Additional settings coming soon...</p>
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                {/* SEO Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>SEO & Meta Tags</CardTitle>
+                    <CardDescription>Configure search engine optimization settings</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="site_title">Site Title</Label>
+                      <Input
+                        id="site_title"
+                        value={settingsData.site_title}
+                        onChange={(e) => setSettingsData({ ...settingsData, site_title: e.target.value })}
+                        placeholder="Your Portfolio - Professional Developer"
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Appears in browser tabs and search results
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="site_description">Site Description</Label>
+                      <Textarea
+                        id="site_description"
+                        value={settingsData.site_description}
+                        onChange={(e) => setSettingsData({ ...settingsData, site_description: e.target.value })}
+                        placeholder="Professional nocode developer specializing in rapid application development..."
+                        rows={3}
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Used in search engine results (150-160 characters recommended)
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="site_keywords">Keywords</Label>
+                      <Input
+                        id="site_keywords"
+                        value={settingsData.site_keywords}
+                        onChange={(e) => setSettingsData({ ...settingsData, site_keywords: e.target.value })}
+                        placeholder="nocode, developer, portfolio, web development"
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Comma-separated keywords relevant to your work
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Social Media Links */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Social Media Links</CardTitle>
+                    <CardDescription>Connect your social media profiles</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="social_github">GitHub URL</Label>
+                      <Input
+                        id="social_github"
+                        value={settingsData.social_github}
+                        onChange={(e) => setSettingsData({ ...settingsData, social_github: e.target.value })}
+                        placeholder="https://github.com/yourusername"
+                        type="url"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="social_linkedin">LinkedIn URL</Label>
+                      <Input
+                        id="social_linkedin"
+                        value={settingsData.social_linkedin}
+                        onChange={(e) => setSettingsData({ ...settingsData, social_linkedin: e.target.value })}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        type="url"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="social_twitter">Twitter/X URL</Label>
+                      <Input
+                        id="social_twitter"
+                        value={settingsData.social_twitter}
+                        onChange={(e) => setSettingsData({ ...settingsData, social_twitter: e.target.value })}
+                        placeholder="https://twitter.com/yourusername"
+                        type="url"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Analytics & Tracking */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Analytics & Tracking</CardTitle>
+                    <CardDescription>Monitor your site's performance and visitor behavior</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="google_analytics">Google Analytics ID</Label>
+                      <Input
+                        id="google_analytics"
+                        value={settingsData.google_analytics}
+                        onChange={(e) => setSettingsData({ ...settingsData, google_analytics: e.target.value })}
+                        placeholder="G-XXXXXXXXXX"
+                      />
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Enter your Google Analytics measurement ID
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Site Maintenance */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Site Maintenance</CardTitle>
+                    <CardDescription>Control site availability and maintenance mode</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="maintenance_mode">Maintenance Mode</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Display a maintenance page to visitors (admins can still access)
+                        </p>
+                      </div>
+                      <Switch
+                        id="maintenance_mode"
+                        checked={settingsData.maintenance_mode}
+                        onCheckedChange={(checked) =>
+                          setSettingsData({ ...settingsData, maintenance_mode: checked })
+                        }
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Save Button */}
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={savingSettings}
+                  className="w-full"
+                  size="lg"
+                >
+                  {savingSettings ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving Settings...
+                    </>
+                  ) : (
+                    "Save All Settings"
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </SidebarInset>
