@@ -27,6 +27,7 @@ const Index = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [siteContent, setSiteContent] = useState({
     hero_heading: "TAYE-NOCODE",
     hero_subtitle: "Nocode Expert in Lovable, Bolt, V0, Replit @Taye David Ibukun",
@@ -93,6 +94,7 @@ const Index = () => {
       if (error) throw error;
       if (data) {
         setProfilePhotoUrl(data.profile_photo_url || null);
+        setMaintenanceMode(data.maintenance_mode || false);
         setSiteContent({
           hero_heading: data.hero_heading || "TAYE-NOCODE",
           hero_subtitle: data.hero_subtitle || "Nocode Expert in Lovable, Bolt, V0, Replit @Taye David Ibukun",
@@ -169,6 +171,38 @@ const Index = () => {
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
   };
+
+  // Show loading state
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>;
+  }
+
+  // Show maintenance page if maintenance mode is enabled and user is not admin
+  if (maintenanceMode && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center px-4 max-w-2xl animate-fade-in">
+          <div className="mb-8">
+            <Settings className="w-24 h-24 mx-auto text-primary/50 animate-pulse" />
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Under Maintenance
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground mb-8">
+            We're currently performing scheduled maintenance to improve your experience.
+            <br />
+            Please check back soon!
+          </p>
+          <div className="text-sm text-muted-foreground/70">
+            Expected to be back online shortly
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-gradient-to-b from-background via-primary/5 to-background">
       {/* Header with Progress Indicator */}
       <header className="border-b bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">
