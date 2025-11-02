@@ -172,10 +172,18 @@ export type Database = {
           contact_title: string | null
           created_at: string
           footer_text: string | null
+          google_analytics: string | null
           hero_heading: string | null
           hero_subtitle: string | null
           id: string
+          maintenance_mode: boolean | null
           profile_photo_url: string | null
+          site_description: string | null
+          site_keywords: string | null
+          site_title: string | null
+          social_github: string | null
+          social_linkedin: string | null
+          social_twitter: string | null
           updated_at: string
         }
         Insert: {
@@ -192,10 +200,18 @@ export type Database = {
           contact_title?: string | null
           created_at?: string
           footer_text?: string | null
+          google_analytics?: string | null
           hero_heading?: string | null
           hero_subtitle?: string | null
           id?: string
+          maintenance_mode?: boolean | null
           profile_photo_url?: string | null
+          site_description?: string | null
+          site_keywords?: string | null
+          site_title?: string | null
+          social_github?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
           updated_at?: string
         }
         Update: {
@@ -212,10 +228,18 @@ export type Database = {
           contact_title?: string | null
           created_at?: string
           footer_text?: string | null
+          google_analytics?: string | null
           hero_heading?: string | null
           hero_subtitle?: string | null
           id?: string
+          maintenance_mode?: boolean | null
           profile_photo_url?: string | null
+          site_description?: string | null
+          site_keywords?: string | null
+          site_title?: string | null
+          social_github?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
           updated_at?: string
         }
         Relationships: []
