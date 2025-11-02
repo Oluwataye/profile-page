@@ -41,7 +41,7 @@ const Index = () => {
     contact_description: "",
     contact_email: "contact@taye-nocode.com",
     contact_availability: "Projects • Partnerships • Consulting",
-    footer_text: "T-Tech Solutions",
+    footer_text: "T-Tech Solutions"
   });
   const navigate = useNavigate();
   const PROJECTS_PER_PAGE = 6;
@@ -84,14 +84,12 @@ const Index = () => {
     fetchProjects(0);
     fetchProfilePhoto();
   }, []);
-
   const fetchProfilePhoto = async () => {
     try {
-      const { data, error } = await supabase
-        .from("site_settings")
-        .select("*")
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from("site_settings").select("*").single();
       if (error) throw error;
       if (data) {
         setProfilePhotoUrl(data.profile_photo_url || null);
@@ -109,7 +107,7 @@ const Index = () => {
           contact_description: data.contact_description || "",
           contact_email: data.contact_email || "contact@taye-nocode.com",
           contact_availability: data.contact_availability || "Projects • Partnerships • Consulting",
-          footer_text: data.footer_text || "T-Tech Solutions",
+          footer_text: data.footer_text || "T-Tech Solutions"
         });
       }
     } catch (error: any) {
@@ -179,30 +177,34 @@ const Index = () => {
             TAYE DAVID IBUKUN
           </h1>
           <nav className="hidden md:flex gap-6 items-center">
-            <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">About</button>
-            <button onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">Projects</button>
-            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">Contact</button>
-            <Button 
-              size="sm"
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all hover:scale-105 shadow-lg"
-            >
+            <button onClick={() => document.getElementById('about')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">About</button>
+            <button onClick={() => document.getElementById('projects')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">Projects</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="text-foreground hover:text-primary transition-all duration-300 font-medium hover:scale-105">Contact</button>
+            <Button size="sm" onClick={() => document.getElementById('contact')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-all hover:scale-105 shadow-lg">
               Hire Me
             </Button>
           </nav>
-          {isAdmin && (
-            <Link to="/admin">
+          {isAdmin && <Link to="/admin">
               <Button variant="ghost" size="sm" className="ml-4">
                 <Settings className="w-4 h-4" />
               </Button>
-            </Link>
-          )}
+            </Link>}
         </div>
       </header>
 
       {/* Hero Section - Enhanced */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" style={{ backgroundImage: 'var(--gradient-mesh)' }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" style={{
+        backgroundImage: 'var(--gradient-mesh)'
+      }} />
         
         <div className="container mx-auto max-w-5xl text-center space-y-6 mb-20 relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4 animate-fade-in">
@@ -210,38 +212,53 @@ const Index = () => {
             <span className="text-sm text-white/90 font-medium">Available for new projects • Fast turnaround</span>
           </div>
 
-          {profilePhotoUrl && (
-            <div className="flex justify-center mb-8 animate-scale-in" style={{ animationDelay: "0.1s" }}>
+          {profilePhotoUrl && <div className="flex justify-center mb-8 animate-scale-in" style={{
+          animationDelay: "0.1s"
+        }}>
               <div className="relative w-32 h-32 md:w-40 md:h-40 animate-float">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-secondary-accent animate-pulse-glow" />
                 <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
                   <img src={profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
           
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tight animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <h2 style={{
+          animationDelay: "0.2s"
+        }} className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight animate-fade-in text-blue-600">
             {siteContent.hero_heading}
           </h2>
-          <p className="text-xl md:text-2xl lg:text-3xl text-white/90 font-medium max-w-3xl mx-auto animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <p className="text-xl md:text-2xl lg:text-3xl text-white/90 font-medium max-w-3xl mx-auto animate-fade-in" style={{
+          animationDelay: "0.3s"
+        }}>
             {siteContent.hero_subtitle}
           </p>
-          <p className="text-lg md:text-xl text-accent/90 font-semibold animate-fade-in" style={{ animationDelay: "0.4s" }}>
+          <p className="text-lg md:text-xl text-accent/90 font-semibold animate-fade-in" style={{
+          animationDelay: "0.4s"
+        }}>
             Build scalable MVPs 10x faster without traditional code
           </p>
 
-          <div className="flex flex-wrap justify-center gap-4 mt-8 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-            <Button size="lg" onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })} className="bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all hover:scale-105 shadow-[var(--shadow-glow)] text-lg px-8">
+          <div className="flex flex-wrap justify-center gap-4 mt-8 animate-fade-in" style={{
+          animationDelay: "0.5s"
+        }}>
+            <Button size="lg" onClick={() => document.getElementById('projects')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all hover:scale-105 shadow-[var(--shadow-glow)] text-lg px-8">
               View My Work
             </Button>
-            <Button size="lg" variant="outline" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all hover:scale-105 text-lg px-8">
+            <Button size="lg" variant="outline" onClick={() => document.getElementById('contact')?.scrollIntoView({
+            behavior: 'smooth'
+          })} className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all hover:scale-105 text-lg px-8">
               Let's Talk
             </Button>
           </div>
         </div>
         
-        <button onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })} className="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-2 border-white/40 flex items-center justify-center hover:border-white/60 hover:bg-white/10 transition-all duration-300 animate-pulse-glow group" aria-label="Scroll down">
+        <button onClick={() => window.scrollTo({
+        top: window.innerHeight,
+        behavior: 'smooth'
+      })} className="absolute bottom-12 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full border-2 border-white/40 flex items-center justify-center hover:border-white/60 hover:bg-white/10 transition-all duration-300 animate-pulse-glow group" aria-label="Scroll down">
           <ChevronDown className="w-6 h-6 text-white group-hover:animate-bounce" />
         </button>
       </section>
@@ -253,53 +270,43 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-secondary-accent bg-clip-text text-transparent animate-fade-in">
               {siteContent.about_title}
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{
+            animationDelay: "0.1s"
+          }}>
               Transforming ideas into reality with modern no-code solutions
             </p>
           </div>
 
           {/* About Content */}
-          {(siteContent.about_left_paragraph1 || siteContent.about_left_paragraph2) && (
-            <div className="max-w-3xl mx-auto mb-16 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          {(siteContent.about_left_paragraph1 || siteContent.about_left_paragraph2) && <div className="max-w-3xl mx-auto mb-16 animate-fade-in" style={{
+          animationDelay: "0.2s"
+        }}>
               <div className="bg-card/50 backdrop-blur-sm border-2 border-primary/20 rounded-2xl p-8 shadow-[var(--shadow-elegant)]">
                 <h3 className="text-2xl font-semibold mb-4 text-foreground">{siteContent.about_left_heading}</h3>
-                {siteContent.about_left_paragraph1 && (
-                  <p className="text-muted-foreground leading-relaxed mb-4">
+                {siteContent.about_left_paragraph1 && <p className="text-muted-foreground leading-relaxed mb-4">
                     {siteContent.about_left_paragraph1}
-                  </p>
-                )}
-                {siteContent.about_left_paragraph2 && (
-                  <p className="text-muted-foreground leading-relaxed">
+                  </p>}
+                {siteContent.about_left_paragraph2 && <p className="text-muted-foreground leading-relaxed">
                     {siteContent.about_left_paragraph2}
-                  </p>
-                )}
+                  </p>}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Services Grid with Icons */}
-          {siteContent.about_services.length > 0 && (
-            <>
-              <h3 className="text-3xl font-bold text-center mb-12 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          {siteContent.about_services.length > 0 && <>
+              <h3 className="text-3xl font-bold text-center mb-12 animate-fade-in" style={{
+            animationDelay: "0.3s"
+          }}>
                 {siteContent.about_right_heading}
               </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {siteContent.about_services.map((service, index) => {
-                  const icons = [Rocket, Code2, Palette, Zap, Target, Users];
-                  const icon = icons[index % icons.length];
-                  return (
-                    <ServiceCard
-                      key={index}
-                      icon={icon}
-                      title={service.split(':')[0] || service}
-                      description={service.split(':')[1]?.trim() || service}
-                      delay={index * 0.1}
-                    />
-                  );
-                })}
+              const icons = [Rocket, Code2, Palette, Zap, Target, Users];
+              const icon = icons[index % icons.length];
+              return <ServiceCard key={index} icon={icon} title={service.split(':')[0] || service} description={service.split(':')[1]?.trim() || service} delay={index * 0.1} />;
+            })}
               </div>
-            </>
-          )}
+            </>}
         </div>
       </section>
 
@@ -316,72 +323,63 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-secondary-accent bg-clip-text text-transparent animate-fade-in">
               Featured Projects
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{
+            animationDelay: "0.1s"
+          }}>
               Explore my latest work and success stories
             </p>
           </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
+          {loading ? <div className="flex justify-center items-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-20 animate-fade-in">
+            </div> : projects.length === 0 ? <div className="text-center py-20 animate-fade-in">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
                 <Rocket className="w-10 h-10 text-primary" />
               </div>
               <p className="text-muted-foreground text-lg">No projects yet. Check back soon for amazing work!</p>
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {projects.map((project, index) => (
-                  <div key={project.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
+                {projects.map((project, index) => <div key={project.id} className="animate-fade-in-up" style={{
+              animationDelay: `${index * 0.1}s`
+            }}>
                     <ProjectCard {...project} />
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
-              {hasMore && (
-                <div className="flex justify-center mt-16 animate-fade-in">
-                  <Button 
-                    onClick={handleLoadMore} 
-                    disabled={loadingMore} 
-                    size="lg" 
-                    className="bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-[var(--shadow-glow)] px-12 py-6 text-lg"
-                  >
-                    {loadingMore ? (
-                      <>
+              {hasMore && <div className="flex justify-center mt-16 animate-fade-in">
+                  <Button onClick={handleLoadMore} disabled={loadingMore} size="lg" className="bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-[var(--shadow-glow)] px-12 py-6 text-lg">
+                    {loadingMore ? <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Loading More...
-                      </>
-                    ) : (
-                      "Load More Projects"
-                    )}
+                      </> : "Load More Projects"}
                   </Button>
-                </div>
-              )}
-            </>
-          )}
+                </div>}
+            </>}
         </div>
       </section>
 
       {/* Contact Section - Enhanced */}
       <section id="contact" className="py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary-accent/5 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'var(--gradient-mesh)' }} />
+        <div className="absolute inset-0 opacity-30" style={{
+        backgroundImage: 'var(--gradient-mesh)'
+      }} />
         
         <div className="container mx-auto px-4 max-w-5xl relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-secondary-accent bg-clip-text text-transparent animate-fade-in">
               {siteContent.contact_title}
             </h2>
-            <p className="text-xl text-muted-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <p className="text-xl text-muted-foreground animate-fade-in" style={{
+            animationDelay: "0.1s"
+          }}>
               I typically respond within 24 hours
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-8 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <div className="space-y-8 animate-fade-in" style={{
+            animationDelay: "0.2s"
+          }}>
               <div>
                 <h3 className="text-3xl font-semibold text-foreground mb-4">{siteContent.contact_heading}</h3>
                 <p className="text-muted-foreground leading-relaxed text-lg">
@@ -414,55 +412,36 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="bg-card/80 backdrop-blur-sm border-2 border-primary/20 rounded-2xl p-8 shadow-[var(--shadow-elegant)] animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <form className="space-y-6" onSubmit={(e) => { 
-                e.preventDefault(); 
-                toast.success("Thanks for reaching out! I'll get back to you within 24 hours."); 
-                (e.target as HTMLFormElement).reset();
-              }}>
+            <div className="bg-card/80 backdrop-blur-sm border-2 border-primary/20 rounded-2xl p-8 shadow-[var(--shadow-elegant)] animate-fade-in" style={{
+            animationDelay: "0.3s"
+          }}>
+              <form className="space-y-6" onSubmit={e => {
+              e.preventDefault();
+              toast.success("Thanks for reaching out! I'll get back to you within 24 hours.");
+              (e.target as HTMLFormElement).reset();
+            }}>
                 <div className="group">
                   <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-2 group-focus-within:text-primary transition-colors">
                     Your Name
                   </label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    required 
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground transition-all placeholder:text-muted-foreground/50" 
-                  />
+                  <input type="text" id="name" required placeholder="John Doe" className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground transition-all placeholder:text-muted-foreground/50" />
                 </div>
 
                 <div className="group">
                   <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2 group-focus-within:text-primary transition-colors">
                     Your Email
                   </label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    required 
-                    placeholder="john@example.com"
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground transition-all placeholder:text-muted-foreground/50" 
-                  />
+                  <input type="email" id="email" required placeholder="john@example.com" className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground transition-all placeholder:text-muted-foreground/50" />
                 </div>
 
                 <div className="group">
                   <label htmlFor="message" className="block text-sm font-semibold text-foreground mb-2 group-focus-within:text-primary transition-colors">
                     What's your challenge?
                   </label>
-                  <textarea 
-                    id="message" 
-                    rows={5} 
-                    required 
-                    placeholder="Tell me about your project..."
-                    className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground resize-none transition-all placeholder:text-muted-foreground/50"
-                  />
+                  <textarea id="message" rows={5} required placeholder="Tell me about your project..." className="w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-background text-foreground resize-none transition-all placeholder:text-muted-foreground/50" />
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all hover:scale-105 shadow-lg py-6 text-lg font-semibold"
-                >
+                <Button type="submit" className="w-full bg-gradient-to-r from-primary via-accent to-secondary-accent hover:opacity-90 transition-all hover:scale-105 shadow-lg py-6 text-lg font-semibold">
                   Send Message
                 </Button>
               </form>
@@ -485,22 +464,19 @@ const Index = () => {
             </div>
             
             <div className="flex gap-6">
-              <button 
-                onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
+              <button onClick={() => document.getElementById('about')?.scrollIntoView({
+              behavior: 'smooth'
+            })} className="text-muted-foreground hover:text-primary transition-colors">
                 About
               </button>
-              <button 
-                onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
+              <button onClick={() => document.getElementById('projects')?.scrollIntoView({
+              behavior: 'smooth'
+            })} className="text-muted-foreground hover:text-primary transition-colors">
                 Projects
               </button>
-              <button 
-                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
+              <button onClick={() => document.getElementById('contact')?.scrollIntoView({
+              behavior: 'smooth'
+            })} className="text-muted-foreground hover:text-primary transition-colors">
                 Contact
               </button>
             </div>
