@@ -226,11 +226,6 @@ const Index = () => {
               Hire Me
             </Button>
           </nav>
-          {isAdmin && <Link to="/admin">
-              <Button variant="ghost" size="sm" className="ml-4">
-                <Settings className="w-4 h-4" />
-              </Button>
-            </Link>}
         </div>
       </header>
 
