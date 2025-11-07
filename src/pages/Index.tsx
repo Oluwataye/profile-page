@@ -8,6 +8,7 @@ import { TechStack } from "@/components/TechStack";
 import { SocialProof } from "@/components/SocialProof";
 import { Loader2, LogOut, Settings, ChevronDown, Rocket, Code2, Palette, Zap, Target, Users } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/assets/taye-nocode-logo.svg";
 interface Project {
   id: string;
   title: string;
@@ -207,9 +208,7 @@ const Index = () => {
       {/* Header with Progress Indicator */}
       <header className="border-b bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary via-accent to-secondary-accent bg-clip-text text-transparent animate-fade-in">
-            TAYE DAVID IBUKUN
-          </h1>
+          <img src={logo} alt="Taye NoCode Logo" className="h-12 md:h-14 animate-fade-in" />
           <nav className="hidden md:flex gap-6 items-center">
             <button onClick={() => document.getElementById('about')?.scrollIntoView({
             behavior: 'smooth'

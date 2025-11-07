@@ -52,6 +52,13 @@ const Admin = () => {
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
 
+  // Logo and Favicon state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const [uploadingBranding, setUploadingBranding] = useState(false);
+
   // Site content state
   const [siteContent, setSiteContent] = useState({
     hero_heading: "",
@@ -1084,6 +1091,156 @@ const Admin = () => {
                         }
                       />
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Branding Settings */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Branding Assets</CardTitle>
+                    <CardDescription>Upload and manage your logo and favicon</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Logo Upload */}
+                    <div className="space-y-4">
+                      <Label htmlFor="logo">Website Logo</Label>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <Input
+                            id="logo"
+                            type="file"
+                            accept="image/svg+xml,image/png,image/jpeg"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setLogoFile(file);
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setLogoPreview(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Recommended: SVG format, transparent background
+                          </p>
+                        </div>
+                        {logoPreview && (
+                          <div className="w-32 h-16 border rounded-lg p-2 bg-muted flex items-center justify-center">
+                            <img src={logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Favicon Upload */}
+                    <div className="space-y-4">
+                      <Label htmlFor="favicon">Favicon</Label>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <Input
+                            id="favicon"
+                            type="file"
+                            accept="image/svg+xml,image/png,image/x-icon"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setFaviconFile(file);
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setFaviconPreview(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Recommended: 32x32px SVG or PNG format
+                          </p>
+                        </div>
+                        {faviconPreview && (
+                          <div className="w-16 h-16 border rounded-lg p-2 bg-muted flex items-center justify-center">
+                            <img src={faviconPreview} alt="Favicon preview" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Upload Button */}
+                    {(logoFile || faviconFile) && (
+                      <Button
+                        onClick={async () => {
+                          setUploadingBranding(true);
+                          try {
+                            let logoUrl = null;
+                            let faviconUrl = null;
+
+                            // Upload logo
+                            if (logoFile) {
+                              const logoPath = `branding/logo-${Date.now()}.${logoFile.name.split('.').pop()}`;
+                              const { error: logoError } = await supabase.storage
+                                .from('project-images')
+                                .upload(logoPath, logoFile);
+
+                              if (logoError) throw logoError;
+
+                              const { data: logoData } = supabase.storage
+                                .from('project-images')
+                                .getPublicUrl(logoPath);
+                              logoUrl = logoData.publicUrl;
+                            }
+
+                            // Upload favicon
+                            if (faviconFile) {
+                              const faviconPath = `branding/favicon-${Date.now()}.${faviconFile.name.split('.').pop()}`;
+                              const { error: faviconError } = await supabase.storage
+                                .from('project-images')
+                                .upload(faviconPath, faviconFile);
+
+                              if (faviconError) throw faviconError;
+
+                              const { data: faviconData } = supabase.storage
+                                .from('project-images')
+                                .getPublicUrl(faviconPath);
+                              faviconUrl = faviconData.publicUrl;
+                            }
+
+                            // Update site_settings with new URLs
+                            const updates: any = {};
+                            if (logoUrl) updates.logo_url = logoUrl;
+                            if (faviconUrl) updates.favicon_url = faviconUrl;
+
+                            const { error: updateError } = await supabase
+                              .from('site_settings')
+                              .update(updates)
+                              .eq('id', (await supabase.from('site_settings').select('id').single()).data?.id);
+
+                            if (updateError) throw updateError;
+
+                            toast.success('Branding assets uploaded successfully');
+                            setLogoFile(null);
+                            setFaviconFile(null);
+                          } catch (error: any) {
+                            console.error('Error uploading branding assets:', error);
+                            toast.error('Failed to upload branding assets');
+                          } finally {
+                            setUploadingBranding(false);
+                          }
+                        }}
+                        disabled={uploadingBranding}
+                        className="w-full"
+                      >
+                        {uploadingBranding ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          'Upload Branding Assets'
+                        )}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 
