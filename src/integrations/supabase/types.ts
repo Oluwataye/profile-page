@@ -171,11 +171,13 @@ export type Database = {
           contact_heading: string | null
           contact_title: string | null
           created_at: string
+          favicon_url: string | null
           footer_text: string | null
           google_analytics: string | null
           hero_heading: string | null
           hero_subtitle: string | null
           id: string
+          logo_url: string | null
           maintenance_mode: boolean | null
           profile_photo_url: string | null
           site_description: string | null
@@ -199,11 +201,13 @@ export type Database = {
           contact_heading?: string | null
           contact_title?: string | null
           created_at?: string
+          favicon_url?: string | null
           footer_text?: string | null
           google_analytics?: string | null
           hero_heading?: string | null
           hero_subtitle?: string | null
           id?: string
+          logo_url?: string | null
           maintenance_mode?: boolean | null
           profile_photo_url?: string | null
           site_description?: string | null
@@ -227,11 +231,13 @@ export type Database = {
           contact_heading?: string | null
           contact_title?: string | null
           created_at?: string
+          favicon_url?: string | null
           footer_text?: string | null
           google_analytics?: string | null
           hero_heading?: string | null
           hero_subtitle?: string | null
           id?: string
+          logo_url?: string | null
           maintenance_mode?: boolean | null
           profile_photo_url?: string | null
           site_description?: string | null
