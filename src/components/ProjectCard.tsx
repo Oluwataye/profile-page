@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, ExternalLink, ArrowRight } from "lucide-react";
+import { Heart, MessageCircle, ArrowRight } from "lucide-react";
+import logo from "@/assets/taye-nocode-logo.svg";
 
 interface ProjectCardProps {
   id: string;
@@ -44,8 +45,12 @@ export const ProjectCard = ({
             className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ExternalLink className="w-12 h-12 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center p-8">
+            <img 
+              src={logo} 
+              alt="Taye NoCode Logo" 
+              className="max-w-full max-h-full object-contain opacity-40 group-hover:opacity-60 transition-opacity duration-300"
+            />
           </div>
         )}
 
