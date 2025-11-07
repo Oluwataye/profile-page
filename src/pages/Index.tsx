@@ -28,6 +28,7 @@ const Index = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [siteContent, setSiteContent] = useState({
     hero_heading: "TAYE-NOCODE",
@@ -91,10 +92,11 @@ const Index = () => {
       const {
         data,
         error
-      } = await supabase.from("site_settings").select("*").single();
+      } = await supabase.from("site_settings").select("*").maybeSingle();
       if (error) throw error;
       if (data) {
         setProfilePhotoUrl(data.profile_photo_url || null);
+        setLogoUrl(data.logo_url || null);
         setMaintenanceMode(data.maintenance_mode || false);
         setSiteContent({
           hero_heading: data.hero_heading || "TAYE-NOCODE",
@@ -208,7 +210,7 @@ const Index = () => {
       {/* Header with Progress Indicator */}
       <header className="border-b bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <img src={logo} alt="Taye NoCode Logo" className="h-12 md:h-14 animate-fade-in" />
+          <img src={logoUrl || logo} alt="Taye NoCode Logo" className="h-12 md:h-14 animate-fade-in" />
           <nav className="hidden md:flex gap-6 items-center">
             <button onClick={() => document.getElementById('about')?.scrollIntoView({
             behavior: 'smooth'
