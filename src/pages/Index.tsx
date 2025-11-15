@@ -6,6 +6,7 @@ import { ProjectCard } from "@/components/ProjectCard";
 import { ServiceCard } from "@/components/ServiceCard";
 import { TechStack } from "@/components/TechStack";
 import { SocialProof } from "@/components/SocialProof";
+import { CategoryFilter } from "@/components/CategoryFilter";
 import { Loader2, LogOut, Settings, ChevronDown, Rocket, Code2, Palette, Zap, Target, Users } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/taye-nocode-logo.svg";
@@ -30,6 +31,7 @@ const Index = () => {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [siteContent, setSiteContent] = useState({
     hero_heading: "TAYE-NOCODE",
     hero_subtitle: "Nocode Expert in Lovable, Bolt, V0, Replit @Taye David Ibukun",
@@ -126,15 +128,24 @@ const Index = () => {
       }
       const from = pageNum * PROJECTS_PER_PAGE;
       const to = from + PROJECTS_PER_PAGE - 1;
+      
+      let query = supabase.from("projects").select("*, project_categories(category_id)", {
+        count: "exact"
+      }).eq("published", true);
+
+      // Filter by categories if any are selected
+      if (selectedCategories.length > 0) {
+        query = query.in("project_categories.category_id", selectedCategories);
+      }
+
       const {
         data: projectsData,
         error,
         count
-      } = await supabase.from("projects").select("*", {
-        count: "exact"
-      }).eq("published", true).order("created_at", {
+      } = await query.order("created_at", {
         ascending: false
       }).range(from, to);
+
       if (error) throw error;
       const projectsWithCounts = await Promise.all((projectsData || []).map(async project => {
         const [likesResult, commentsResult, likeResult] = await Promise.all([supabase.from("likes").select("*", {
@@ -358,6 +369,17 @@ const Index = () => {
           }}>
               Explore my latest work and success stories
             </p>
+          </div>
+
+          {/* Category Filter */}
+          <div className="mb-12">
+            <CategoryFilter 
+              selectedCategories={selectedCategories}
+              onCategoryChange={(categories) => {
+                setSelectedCategories(categories);
+                fetchProjects(0);
+              }}
+            />
           </div>
 
           {loading ? <div className="flex justify-center items-center py-20">
