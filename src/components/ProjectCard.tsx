@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, ArrowRight } from "lucide-react";
 import logo from "@/assets/taye-nocode-logo.svg";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface ProjectCardProps {
   id: string;
@@ -26,6 +28,27 @@ export const ProjectCard = ({
   comments_count,
   is_liked,
 }: ProjectCardProps) => {
+  const [defaultThumbnail, setDefaultThumbnail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDefaultThumbnail = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("default_thumbnail_url")
+        .maybeSingle();
+      
+      if (data?.default_thumbnail_url) {
+        setDefaultThumbnail(data.default_thumbnail_url);
+      }
+    };
+
+    if (!thumbnail_url) {
+      fetchDefaultThumbnail();
+    }
+  }, [thumbnail_url]);
+
+  const displayThumbnail = thumbnail_url || defaultThumbnail;
+
   return (
     <Card className="group relative overflow-hidden transition-all duration-500 hover:shadow-[var(--shadow-glow)] hover:-translate-y-2 border-2 hover:border-primary/30">
       <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-primary/10 via-accent/10 to-secondary-accent/10">
@@ -38,9 +61,9 @@ export const ProjectCard = ({
           </div>
         </div>
 
-        {thumbnail_url ? (
+        {displayThumbnail ? (
           <img
-            src={thumbnail_url}
+            src={displayThumbnail}
             alt={title}
             className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
           />

@@ -171,6 +171,7 @@ export type Database = {
           contact_heading: string | null
           contact_title: string | null
           created_at: string
+          default_thumbnail_url: string | null
           favicon_url: string | null
           footer_text: string | null
           google_analytics: string | null
@@ -201,6 +202,7 @@ export type Database = {
           contact_heading?: string | null
           contact_title?: string | null
           created_at?: string
+          default_thumbnail_url?: string | null
           favicon_url?: string | null
           footer_text?: string | null
           google_analytics?: string | null
@@ -231,6 +233,7 @@ export type Database = {
           contact_heading?: string | null
           contact_title?: string | null
           created_at?: string
+          default_thumbnail_url?: string | null
           favicon_url?: string | null
           footer_text?: string | null
           google_analytics?: string | null

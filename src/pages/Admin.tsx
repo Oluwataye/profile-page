@@ -57,6 +57,8 @@ const Admin = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const [defaultThumbnailFile, setDefaultThumbnailFile] = useState<File | null>(null);
+  const [defaultThumbnailPreview, setDefaultThumbnailPreview] = useState<string | null>(null);
   const [uploadingBranding, setUploadingBranding] = useState(false);
 
   // Site content state
@@ -1167,14 +1169,48 @@ const Admin = () => {
                       </div>
                     </div>
 
+                    {/* Default Thumbnail Upload */}
+                    <div className="space-y-4">
+                      <Label htmlFor="defaultThumbnail">Default Project Thumbnail</Label>
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1">
+                          <Input
+                            id="defaultThumbnail"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setDefaultThumbnailFile(file);
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setDefaultThumbnailPreview(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Used for projects without custom thumbnails
+                          </p>
+                        </div>
+                        {defaultThumbnailPreview && (
+                          <div className="w-32 h-24 border rounded-lg p-2 bg-muted flex items-center justify-center">
+                            <img src={defaultThumbnailPreview} alt="Default thumbnail preview" className="max-w-full max-h-full object-cover rounded" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     {/* Upload Button */}
-                    {(logoFile || faviconFile) && (
+                    {(logoFile || faviconFile || defaultThumbnailFile) && (
                       <Button
                         onClick={async () => {
                           setUploadingBranding(true);
                           try {
                             let logoUrl = null;
                             let faviconUrl = null;
+                            let defaultThumbnailUrl = null;
 
                             // Upload logo
                             if (logoFile) {
@@ -1206,10 +1242,26 @@ const Admin = () => {
                               faviconUrl = faviconData.publicUrl;
                             }
 
+                            // Upload default thumbnail
+                            if (defaultThumbnailFile) {
+                              const thumbnailPath = `branding/default-thumbnail-${Date.now()}.${defaultThumbnailFile.name.split('.').pop()}`;
+                              const { error: thumbnailError } = await supabase.storage
+                                .from('project-images')
+                                .upload(thumbnailPath, defaultThumbnailFile);
+
+                              if (thumbnailError) throw thumbnailError;
+
+                              const { data: thumbnailData } = supabase.storage
+                                .from('project-images')
+                                .getPublicUrl(thumbnailPath);
+                              defaultThumbnailUrl = thumbnailData.publicUrl;
+                            }
+
                             // Update site_settings with new URLs
                             const updates: any = {};
                             if (logoUrl) updates.logo_url = logoUrl;
                             if (faviconUrl) updates.favicon_url = faviconUrl;
+                            if (defaultThumbnailUrl) updates.default_thumbnail_url = defaultThumbnailUrl;
 
                             const { error: updateError } = await supabase
                               .from('site_settings')
@@ -1220,7 +1272,12 @@ const Admin = () => {
 
                             toast.success('Branding assets uploaded successfully');
                             setLogoFile(null);
+                            setLogoPreview(null);
                             setFaviconFile(null);
+                            setFaviconPreview(null);
+                            setDefaultThumbnailFile(null);
+                            setDefaultThumbnailPreview(null);
+                            fetchSiteSettings();
                           } catch (error: any) {
                             console.error('Error uploading branding assets:', error);
                             toast.error('Failed to upload branding assets');
