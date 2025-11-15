@@ -9,11 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, X, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
+import { BulkActions } from "@/components/admin/BulkActions";
+import { CategoryAssignDialog } from "@/components/admin/CategoryAssignDialog";
+import { ImageUploadManager } from "@/components/admin/ImageUploadManager";
 
 interface Project {
   id: string;
@@ -22,6 +26,7 @@ interface Project {
   published: boolean;
   tech_stack: string[] | null;
   thumbnail_url: string | null;
+  images: string[] | null;
 }
 
 const Admin = () => {
@@ -46,6 +51,16 @@ const Admin = () => {
   const [newTech, setNewTech] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<File[]>([]);
+  const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
+  
+  // Bulk operations state
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  
+  // Category management state
+  const [categories, setCategories] = useState<any[]>([]);
+  const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", color: "#3b82f6" });
   
   // Profile photo state
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
@@ -102,7 +117,7 @@ const Admin = () => {
 
   const initializeAdminData = async () => {
     try {
-      await Promise.all([fetchProjects(), fetchSiteSettings()]);
+      await Promise.all([fetchProjects(), fetchSiteSettings(), fetchCategories()]);
     } catch (error) {
       console.error("Error initializing admin data:", error);
       toast.error("Failed to load admin data");
@@ -166,6 +181,124 @@ const Admin = () => {
     } catch (error: any) {
       toast.error("Failed to load projects");
       console.error(error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error("Failed to load categories:", error);
+    }
+  };
+
+  const toggleProjectSelection = (projectId: string) => {
+    setSelectedProjects(prev =>
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const toggleAllProjects = () => {
+    if (selectedProjects.length === projects.length) {
+      setSelectedProjects([]);
+    } else {
+      setSelectedProjects(projects.map(p => p.id));
+    }
+  };
+
+  const handleBulkPublish = async () => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ published: true })
+        .in("id", selectedProjects);
+
+      if (error) throw error;
+      toast.success(`${selectedProjects.length} project(s) published`);
+      setSelectedProjects([]);
+      fetchProjects();
+    } catch (error: any) {
+      toast.error("Failed to publish projects");
+    }
+  };
+
+  const handleBulkUnpublish = async () => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ published: false })
+        .in("id", selectedProjects);
+
+      if (error) throw error;
+      toast.success(`${selectedProjects.length} project(s) unpublished`);
+      setSelectedProjects([]);
+      fetchProjects();
+    } catch (error: any) {
+      toast.error("Failed to unpublish projects");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedProjects.length} project(s)?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .in("id", selectedProjects);
+
+      if (error) throw error;
+      toast.success(`${selectedProjects.length} project(s) deleted`);
+      setSelectedProjects([]);
+      fetchProjects();
+    } catch (error: any) {
+      toast.error("Failed to delete projects");
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.name || !newCategory.slug) {
+      toast.error("Name and slug are required");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("categories")
+        .insert([newCategory]);
+
+      if (error) throw error;
+      toast.success("Category added successfully");
+      setNewCategory({ name: "", slug: "", description: "", color: "#3b82f6" });
+      fetchCategories();
+    } catch (error: any) {
+      toast.error("Failed to add category");
+      console.error(error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this category?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("categories")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Category deleted");
+      fetchCategories();
+    } catch (error: any) {
+      toast.error("Failed to delete category");
     }
   };
 
@@ -239,6 +372,7 @@ const Admin = () => {
 
     try {
       let thumbnail_url = null;
+      let images: string[] = [];
 
       if (thumbnailFile) {
         const fileExt = thumbnailFile.name.split('.').pop();
@@ -258,10 +392,33 @@ const Admin = () => {
         thumbnail_url = publicUrl;
       }
 
+      // Upload gallery images
+      if (galleryImages.length > 0) {
+        const uploadPromises = galleryImages.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `gallery/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('project-images')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('project-images')
+            .getPublicUrl(fileName);
+
+          return publicUrl;
+        });
+
+        images = await Promise.all(uploadPromises);
+      }
+
       const { error } = await supabase.from("projects").insert({
         ...formData,
         tech_stack: techStack.length > 0 ? techStack : null,
         thumbnail_url,
+        images: images.length > 0 ? images : null,
       });
 
       if (error) throw error;
@@ -278,6 +435,7 @@ const Admin = () => {
       setTechStack([]);
       setThumbnailFile(null);
       setThumbnailPreview(null);
+      setGalleryImages([]);
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to add project");
@@ -339,6 +497,8 @@ const Admin = () => {
     });
     setTechStack(project.tech_stack || []);
     setThumbnailPreview(project.thumbnail_url);
+    setExistingGalleryImages(project.images || []);
+    setGalleryImages([]);
     setShowEditDialog(true);
   };
 
@@ -349,6 +509,7 @@ const Admin = () => {
 
     try {
       let thumbnail_url = editingProject.thumbnail_url;
+      let images = existingGalleryImages;
 
       if (thumbnailFile) {
         const fileExt = thumbnailFile.name.split('.').pop();
@@ -368,6 +529,29 @@ const Admin = () => {
         thumbnail_url = publicUrl;
       }
 
+      // Upload new gallery images
+      if (galleryImages.length > 0) {
+        const uploadPromises = galleryImages.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `gallery/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('project-images')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('project-images')
+            .getPublicUrl(fileName);
+
+          return publicUrl;
+        });
+
+        const newImages = await Promise.all(uploadPromises);
+        images = [...images, ...newImages];
+      }
+
       const { error } = await supabase
         .from("projects")
         .update({
@@ -376,6 +560,7 @@ const Admin = () => {
           published: formData.published,
           tech_stack: techStack.length > 0 ? techStack : null,
           thumbnail_url,
+          images: images.length > 0 ? images : null,
         })
         .eq("id", editingProject.id);
 
@@ -394,6 +579,8 @@ const Admin = () => {
       setTechStack([]);
       setThumbnailFile(null);
       setThumbnailPreview(null);
+      setGalleryImages([]);
+      setExistingGalleryImages([]);
       fetchProjects();
     } catch (error: any) {
       toast.error("Failed to update project");

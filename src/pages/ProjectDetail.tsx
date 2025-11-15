@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ShareButtons } from "@/components/ShareButtons";
+import { ImageGallery } from "@/components/ImageGallery";
 import { Heart, MessageCircle, ExternalLink, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -247,6 +248,16 @@ const ProjectDetail = () => {
                 className="w-full h-auto"
               />
             </div>
+          )}
+
+          {/* Image Gallery */}
+          {project.images && project.images.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">Project Gallery</h2>
+                <ImageGallery images={project.images} alt={project.title} />
+              </CardContent>
+            </Card>
           )}
 
           {/* Description */}
