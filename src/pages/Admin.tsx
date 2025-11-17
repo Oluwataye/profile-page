@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, X, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { BulkActions } from "@/components/admin/BulkActions";
@@ -62,6 +63,10 @@ const Admin = () => {
   // Category management state
   const [categories, setCategories] = useState<any[]>([]);
   const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", color: "#3b82f6" });
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
+  const [showEditCategoryDialog, setShowEditCategoryDialog] = useState(false);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
+  const [projectCategories, setProjectCategories] = useState<Record<string, any[]>>({});
   
   // Profile photo state
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
@@ -179,9 +184,45 @@ const Admin = () => {
 
       if (error) throw error;
       setProjects(data || []);
+      
+      // Fetch categories for each project
+      if (data && data.length > 0) {
+        await fetchProjectCategories(data.map(p => p.id));
+      }
     } catch (error: any) {
       toast.error("Failed to load projects");
       console.error(error);
+    }
+  };
+
+  const fetchProjectCategories = async (projectIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from("project_categories")
+        .select(`
+          project_id,
+          categories (
+            id,
+            name,
+            color
+          )
+        `)
+        .in("project_id", projectIds);
+
+      if (error) throw error;
+      
+      // Group categories by project_id
+      const grouped: Record<string, any[]> = {};
+      data?.forEach((item: any) => {
+        if (!grouped[item.project_id]) {
+          grouped[item.project_id] = [];
+        }
+        grouped[item.project_id].push(item.categories);
+      });
+      
+      setProjectCategories(grouped);
+    } catch (error: any) {
+      console.error("Failed to load project categories:", error);
     }
   };
 
@@ -829,29 +870,41 @@ const Admin = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={async () => {
-                                  if (confirm('Are you sure you want to delete this category?')) {
-                                    try {
-                                      const { error } = await supabase
-                                        .from('categories')
-                                        .delete()
-                                        .eq('id', category.id);
-                                      
-                                      if (error) throw error;
-                                      
-                                      toast.success('Category deleted');
-                                      fetchCategories();
-                                    } catch (error: any) {
-                                      toast.error(error.message);
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingCategory(category);
+                                    setShowEditCategoryDialog(true);
+                                  }}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (confirm('Are you sure you want to delete this category?')) {
+                                      try {
+                                        const { error } = await supabase
+                                          .from('categories')
+                                          .delete()
+                                          .eq('id', category.id);
+                                        
+                                        if (error) throw error;
+                                        
+                                        toast.success('Category deleted');
+                                        fetchCategories();
+                                      } catch (error: any) {
+                                        toast.error(error.message);
+                                      }
                                     }
-                                  }
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -982,6 +1035,28 @@ const Admin = () => {
                   </Card>
                 )}
 
+                {/* Category Filter */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="category-filter">Filter by category:</Label>
+                      <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
+                        <SelectTrigger className="w-[200px]">
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <BulkActions
                   selectedCount={selectedProjects.length}
                   onPublish={handleBulkPublish}
@@ -994,7 +1069,13 @@ const Admin = () => {
                   {projects.length === 0 ? (
                     <p className="text-muted-foreground">No projects yet</p>
                   ) : (
-                    projects.map((project) => (
+                    projects
+                      .filter((project) => {
+                        if (selectedCategoryFilter === "all") return true;
+                        const projectCats = projectCategories[project.id] || [];
+                        return projectCats.some((cat: any) => cat.id === selectedCategoryFilter);
+                      })
+                      .map((project) => (
                       <Card key={project.id}>
                         <CardContent className="p-6">
                           <div className="flex items-start gap-4">
@@ -1017,6 +1098,21 @@ const Admin = () => {
                                 </Badge>
                               </div>
                               <p className="text-muted-foreground mb-4">{project.description}</p>
+                              {projectCategories[project.id] && projectCategories[project.id].length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                  {projectCategories[project.id].map((category: any) => (
+                                    <Badge 
+                                      key={category.id} 
+                                      style={{ 
+                                        backgroundColor: category.color,
+                                        color: '#fff'
+                                      }}
+                                    >
+                                      {category.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                               {project.tech_stack && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                   {project.tech_stack.map((tech) => (
@@ -1782,6 +1878,88 @@ const Admin = () => {
             fetchProjects();
           }}
         />
+
+        {/* Edit Category Dialog */}
+        <Dialog open={showEditCategoryDialog} onOpenChange={setShowEditCategoryDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Category</DialogTitle>
+              <DialogDescription>Update category details</DialogDescription>
+            </DialogHeader>
+            {editingCategory && (
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const { error } = await supabase
+                    .from('categories')
+                    .update({
+                      name: editingCategory.name,
+                      slug: editingCategory.slug,
+                      description: editingCategory.description,
+                      color: editingCategory.color
+                    })
+                    .eq('id', editingCategory.id);
+                  
+                  if (error) throw error;
+                  
+                  toast.success('Category updated successfully');
+                  setShowEditCategoryDialog(false);
+                  setEditingCategory(null);
+                  fetchCategories();
+                } catch (error: any) {
+                  toast.error(error.message);
+                }
+              }} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-cat-name">Name *</Label>
+                    <Input
+                      id="edit-cat-name"
+                      value={editingCategory.name}
+                      onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-cat-slug">Slug *</Label>
+                    <Input
+                      id="edit-cat-slug"
+                      value={editingCategory.slug}
+                      onChange={(e) => setEditingCategory({ ...editingCategory, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cat-desc">Description</Label>
+                  <Input
+                    id="edit-cat-desc"
+                    value={editingCategory.description || ''}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, description: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cat-color">Color</Label>
+                  <Input
+                    id="edit-cat-color"
+                    type="color"
+                    value={editingCategory.color}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, color: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => {
+                    setShowEditCategoryDialog(false);
+                    setEditingCategory(null);
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Update Category</Button>
+                </div>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );
