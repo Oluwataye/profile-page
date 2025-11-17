@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderOpen, FileText, Settings, LogOut, User } from "lucide-react";
+import { LayoutDashboard, FolderOpen, FileText, Settings, LogOut, User, Tag } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,7 @@ interface AdminSidebarProps {
 const menuItems = [
   { id: "overview", title: "Overview", icon: LayoutDashboard },
   { id: "projects", title: "Projects", icon: FolderOpen },
+  { id: "categories", title: "Categories", icon: Tag },
   { id: "content", title: "Site Content", icon: FileText },
   { id: "profile", title: "Profile Photo", icon: User },
   { id: "settings", title: "Settings", icon: Settings },

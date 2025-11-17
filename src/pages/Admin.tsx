@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2, X, Edit } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -726,6 +727,141 @@ const Admin = () => {
               </div>
             )}
 
+            {/* Categories Section */}
+            {activeSection === "categories" && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold">Manage Categories</h2>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Add New Category</CardTitle>
+                    <CardDescription>Create categories to organize your projects</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const { error } = await supabase
+                          .from('categories')
+                          .insert([newCategory]);
+                        
+                        if (error) throw error;
+                        
+                        toast.success('Category created successfully');
+                        setNewCategory({ name: '', slug: '', description: '', color: '#3b82f6' });
+                        fetchCategories();
+                      } catch (error: any) {
+                        toast.error(error.message);
+                      }
+                    }} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="cat-name">Name *</Label>
+                          <Input
+                            id="cat-name"
+                            value={newCategory.name}
+                            onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cat-slug">Slug *</Label>
+                          <Input
+                            id="cat-slug"
+                            value={newCategory.slug}
+                            onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cat-desc">Description</Label>
+                        <Input
+                          id="cat-desc"
+                          value={newCategory.description}
+                          onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cat-color">Color</Label>
+                        <Input
+                          id="cat-color"
+                          type="color"
+                          value={newCategory.color}
+                          onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                        />
+                      </div>
+                      <Button type="submit">Create Category</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Existing Categories</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Slug</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Color</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {categories.map((category) => (
+                          <TableRow key={category.id}>
+                            <TableCell className="font-medium">{category.name}</TableCell>
+                            <TableCell>{category.slug}</TableCell>
+                            <TableCell>{category.description || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-6 h-6 rounded border"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                {category.color}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={async () => {
+                                  if (confirm('Are you sure you want to delete this category?')) {
+                                    try {
+                                      const { error } = await supabase
+                                        .from('categories')
+                                        .delete()
+                                        .eq('id', category.id);
+                                      
+                                      if (error) throw error;
+                                      
+                                      toast.success('Category deleted');
+                                      fetchCategories();
+                                    } catch (error: any) {
+                                      toast.error(error.message);
+                                    }
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Projects Section */}
             {activeSection === "projects" && (
               <div className="space-y-6">
@@ -840,14 +976,19 @@ const Admin = () => {
                               "Create Project"
                             )}
                           </Button>
-                          <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                            Cancel
-                          </Button>
                         </div>
                       </form>
                     </CardContent>
                   </Card>
                 )}
+
+                <BulkActions
+                  selectedCount={selectedProjects.length}
+                  onPublish={handleBulkPublish}
+                  onUnpublish={handleBulkUnpublish}
+                  onDelete={handleBulkDelete}
+                  onAssignCategories={() => setShowCategoryDialog(true)}
+                />
 
                 <div className="space-y-4">
                   {projects.length === 0 ? (
@@ -856,7 +997,18 @@ const Admin = () => {
                     projects.map((project) => (
                       <Card key={project.id}>
                         <CardContent className="p-6">
-                          <div className="flex justify-between items-start gap-4">
+                          <div className="flex items-start gap-4">
+                            <Checkbox
+                              checked={selectedProjects.includes(project.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedProjects([...selectedProjects, project.id]);
+                                } else {
+                                  setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+                                }
+                              }}
+                              className="mt-1"
+                            />
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-xl font-semibold">{project.title}</h3>
@@ -1619,6 +1771,17 @@ const Admin = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Category Assignment Dialog */}
+        <CategoryAssignDialog
+          open={showCategoryDialog}
+          onOpenChange={setShowCategoryDialog}
+          projectIds={selectedProjects}
+          onSuccess={() => {
+            setSelectedProjects([]);
+            fetchProjects();
+          }}
+        />
       </div>
     </SidebarProvider>
   );
