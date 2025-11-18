@@ -12,7 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, X, Edit } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Edit, GripVertical, Tag } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { IconPicker } from "@/components/admin/IconPicker";
+import * as Icons from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
@@ -62,11 +65,12 @@ const Admin = () => {
   
   // Category management state
   const [categories, setCategories] = useState<any[]>([]);
-  const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", color: "#3b82f6" });
+  const [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", color: "#3b82f6", icon: "" });
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [showEditCategoryDialog, setShowEditCategoryDialog] = useState(false);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [projectCategories, setProjectCategories] = useState<Record<string, any[]>>({});
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   
   // Profile photo state
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
@@ -231,10 +235,23 @@ const Admin = () => {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
-        .order("name");
+        .order("display_order", { ascending: true });
 
       if (error) throw error;
       setCategories(data || []);
+      
+      // Calculate category counts
+      const { data: projectCatData } = await supabase
+        .from("project_categories")
+        .select("category_id");
+      
+      if (projectCatData) {
+        const counts: Record<string, number> = {};
+        projectCatData.forEach((pc) => {
+          counts[pc.category_id] = (counts[pc.category_id] || 0) + 1;
+        });
+        setCategoryCounts(counts);
+      }
     } catch (error: any) {
       console.error("Failed to load categories:", error);
     }
@@ -319,7 +336,7 @@ const Admin = () => {
 
       if (error) throw error;
       toast.success("Category added successfully");
-      setNewCategory({ name: "", slug: "", description: "", color: "#3b82f6" });
+      setNewCategory({ name: "", slug: "", description: "", color: "#3b82f6", icon: "" });
       fetchCategories();
     } catch (error: any) {
       toast.error("Failed to add category");
@@ -341,6 +358,37 @@ const Admin = () => {
       fetchCategories();
     } catch (error: any) {
       toast.error("Failed to delete category");
+    }
+  };
+
+  const handleCategoryDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const items = Array.from(categories);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update display_order for all categories
+    const updates = items.map((item, index) => ({
+      id: item.id,
+      display_order: index,
+    }));
+
+    setCategories(items);
+
+    // Update in database
+    try {
+      for (const update of updates) {
+        await supabase
+          .from("categories")
+          .update({ display_order: update.display_order })
+          .eq("id", update.id);
+      }
+      toast.success("Category order updated");
+    } catch (error: any) {
+      toast.error("Failed to update category order");
+      console.error(error);
+      fetchCategories(); // Reload on error
     }
   };
 
@@ -783,7 +831,7 @@ const Admin = () => {
                   <CardContent>
                     <form onSubmit={async (e) => {
                       e.preventDefault();
-                      try {
+                        try {
                         const { error } = await supabase
                           .from('categories')
                           .insert([newCategory]);
@@ -791,7 +839,7 @@ const Admin = () => {
                         if (error) throw error;
                         
                         toast.success('Category created successfully');
-                        setNewCategory({ name: '', slug: '', description: '', color: '#3b82f6' });
+                        setNewCategory({ name: '', slug: '', description: '', color: '#3b82f6', icon: '' });
                         fetchCategories();
                       } catch (error: any) {
                         toast.error(error.message);
@@ -832,6 +880,13 @@ const Admin = () => {
                           type="color"
                           value={newCategory.color}
                           onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Icon</Label>
+                        <IconPicker
+                          value={newCategory.icon}
+                          onChange={(icon) => setNewCategory({ ...newCategory, icon })}
                         />
                       </div>
                       <Button type="submit">Create Category</Button>
@@ -1896,7 +1951,8 @@ const Admin = () => {
                       name: editingCategory.name,
                       slug: editingCategory.slug,
                       description: editingCategory.description,
-                      color: editingCategory.color
+                      color: editingCategory.color,
+                      icon: editingCategory.icon
                     })
                     .eq('id', editingCategory.id);
                   
@@ -1945,6 +2001,13 @@ const Admin = () => {
                     type="color"
                     value={editingCategory.color}
                     onChange={(e) => setEditingCategory({ ...editingCategory, color: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Icon</Label>
+                  <IconPicker
+                    value={editingCategory.icon || ''}
+                    onChange={(icon) => setEditingCategory({ ...editingCategory, icon })}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
