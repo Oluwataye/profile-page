@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import * as Icons from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
   slug: string;
   color: string;
+  icon: string | null;
 }
 
 interface CategoryFilterProps {
@@ -27,7 +29,7 @@ export const CategoryFilter = ({ selectedCategories, onCategoryChange }: Categor
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      .order("name");
+      .order("display_order", { ascending: true });
 
     if (!error && data) {
       setCategories(data);
@@ -65,21 +67,28 @@ export const CategoryFilter = ({ selectedCategories, onCategoryChange }: Categor
         )}
       </div>
       <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <Badge
-            key={category.id}
-            variant={selectedCategories.includes(category.id) ? "default" : "outline"}
-            className="cursor-pointer transition-all duration-200 hover:scale-105"
-            style={{
-              backgroundColor: selectedCategories.includes(category.id) ? category.color : 'transparent',
-              borderColor: category.color,
-              color: selectedCategories.includes(category.id) ? 'white' : category.color,
-            }}
-            onClick={() => toggleCategory(category.id)}
-          >
-            {category.name}
-          </Badge>
-        ))}
+        {categories.map((category) => {
+          const IconComponent = category.icon && (Icons as any)[category.icon] 
+            ? (Icons as any)[category.icon] 
+            : null;
+
+          return (
+            <Badge
+              key={category.id}
+              variant={selectedCategories.includes(category.id) ? "default" : "outline"}
+              className="cursor-pointer transition-all duration-200 hover:scale-105 flex items-center gap-1.5"
+              style={{
+                backgroundColor: selectedCategories.includes(category.id) ? category.color : 'transparent',
+                borderColor: category.color,
+                color: selectedCategories.includes(category.id) ? 'white' : category.color,
+              }}
+              onClick={() => toggleCategory(category.id)}
+            >
+              {IconComponent && <IconComponent className="w-3.5 h-3.5" />}
+              {category.name}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );

@@ -6,6 +6,14 @@ import { Heart, MessageCircle, ArrowRight } from "lucide-react";
 import logo from "@/assets/taye-nocode-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import * as Icons from "lucide-react";
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+}
 
 interface ProjectCardProps {
   id: string;
@@ -29,6 +37,7 @@ export const ProjectCard = ({
   is_liked,
 }: ProjectCardProps) => {
   const [defaultThumbnail, setDefaultThumbnail] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const fetchDefaultThumbnail = async () => {
@@ -42,10 +51,25 @@ export const ProjectCard = ({
       }
     };
 
+    const fetchCategories = async () => {
+      const { data } = await supabase
+        .from("project_categories")
+        .select("category_id, categories(id, name, color, icon)")
+        .eq("project_id", id);
+
+      if (data) {
+        const categoryData = data
+          .map(pc => pc.categories)
+          .filter(Boolean) as Category[];
+        setCategories(categoryData);
+      }
+    };
+
     if (!thumbnail_url) {
       fetchDefaultThumbnail();
     }
-  }, [thumbnail_url]);
+    fetchCategories();
+  }, [thumbnail_url, id]);
 
   const displayThumbnail = thumbnail_url || defaultThumbnail;
 
@@ -109,6 +133,32 @@ export const ProjectCard = ({
         <p className="text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
           {description}
         </p>
+        
+        {/* Category badges */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {categories.map((category) => {
+              const IconComponent = category.icon && (Icons as any)[category.icon] 
+                ? (Icons as any)[category.icon] 
+                : null;
+
+              return (
+                <Badge
+                  key={category.id}
+                  variant="outline"
+                  className="flex items-center gap-1.5 text-xs"
+                  style={{
+                    borderColor: category.color,
+                    color: category.color,
+                  }}
+                >
+                  {IconComponent && <IconComponent className="w-3 h-3" />}
+                  {category.name}
+                </Badge>
+              );
+            })}
+          </div>
+        )}
         
         {/* Tech stack visible when not hovering */}
         {tech_stack && tech_stack.length > 0 && (
