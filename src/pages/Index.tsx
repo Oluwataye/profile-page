@@ -89,6 +89,10 @@ const Index = () => {
     fetchProjects(0);
     fetchProfilePhoto();
   }, []);
+
+  useEffect(() => {
+    fetchProjects(0);
+  }, [selectedCategories]);
   const fetchProfilePhoto = async () => {
     try {
       const {
